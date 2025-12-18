@@ -1,13 +1,12 @@
-# Use official PHP image with Laravel dependencies
 FROM php:8.2-fpm
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Install system dependencies
+# Install system dependencies and PHP extensions
 RUN apt-get update && apt-get install -y \
-    git unzip curl libzip-dev zip libonig-dev \
-    && docker-php-ext-install pdo pdo_mysql mbstring zip bcmath
+    git unzip curl libzip-dev zip libonig-dev libxml2-dev \
+    && docker-php-ext-install pdo_mysql mbstring bcmath zip
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -23,7 +22,7 @@ RUN php artisan config:cache \
     && php artisan route:cache \
     && php artisan view:cache
 
-# Set folder permissions
+# Set permissions
 RUN chown -R www-data:www-data storage bootstrap/cache
 
 # Expose port
