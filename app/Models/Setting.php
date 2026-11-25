@@ -30,10 +30,6 @@ class Setting extends Model
     public static function getValue(string $key, mixed $default = null): mixed
     {
         try {
-            if (!Schema::hasTable('settings')) {
-                return $default ?? (self::defaults()[$key] ?? null);
-            }
-
             $all = Cache::remember('app_settings_map', 300, function () {
                 return self::query()->pluck('value', 'key')->toArray();
             });

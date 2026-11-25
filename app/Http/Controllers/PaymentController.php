@@ -49,16 +49,15 @@ class PaymentController extends Controller
             $query->whereDate('payment_date', '<=', $to);
         }
 
-        $summaryQuery = clone $query;
-        $totalCollected = max(0, round(
-            (float) (clone $summaryQuery)->sum('amount_paid') - (float) (clone $summaryQuery)->sum('refunded_amount'),
-            2
-        ));
-        $totalOutstanding = round(
-            (float) (clone $summaryQuery)->whereIn('status', [Payment::STATUS_PENDING, Payment::STATUS_PARTIALLY_PAID])->sum('remaining_balance'),
-            2
-        );
-        $totalRefunded = round((float) (clone $summaryQuery)->sum('refunded_amount'), 2);
+        $summary = (clone $query)->selectRaw("
+            COALESCE(SUM(amount_paid), 0) as sum_paid,
+            COALESCE(SUM(refunded_amount), 0) as sum_refunded,
+            COALESCE(SUM(CASE WHEN status IN ('pending', 'partially_paid') THEN remaining_balance ELSE 0 END), 0) as sum_outstanding
+        ")->first();
+
+        $totalCollected = max(0, round((float) ($summary->sum_paid ?? 0) - (float) ($summary->sum_refunded ?? 0), 2));
+        $totalOutstanding = round((float) ($summary->sum_outstanding ?? 0), 2);
+        $totalRefunded = round((float) ($summary->sum_refunded ?? 0), 2);
 
         $payments = $query->latest('payment_date')->latest('id')->paginate(15)->withQueryString();
         $paymentMethods = Setting::paymentMethods();

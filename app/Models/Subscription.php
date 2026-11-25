@@ -87,6 +87,15 @@ class Subscription extends Model
 
     public function netPaidAmount(): float
     {
+        if ($this->relationLoaded('payments')) {
+            $paid = (float) $this->payments
+                ->whereIn('status', [Payment::STATUS_PAID, Payment::STATUS_PARTIALLY_PAID, Payment::STATUS_REFUNDED])
+                ->sum('amount_paid');
+            $refunded = (float) $this->payments->sum('refunded_amount');
+
+            return max(0, round($paid - $refunded, 2));
+        }
+
         $paid = (float) $this->payments()
             ->whereIn('status', [Payment::STATUS_PAID, Payment::STATUS_PARTIALLY_PAID, Payment::STATUS_REFUNDED])
             ->sum('amount_paid');
@@ -123,10 +132,18 @@ class Subscription extends Model
         return max(0, (int) now()->startOfDay()->diffInDays($this->end_date->copy()->startOfDay(), false));
     }
 
-    public static function syncExpiredStatuses(): int
+    public static function syncExpiredStatuses(bool $force = false): int
     {
-        return self::where('status', self::STATUS_ACTIVE)
+        if (!$force && \Illuminate\Support\Facades\Cache::has('subscriptions_expired_synced')) {
+            return 0;
+        }
+
+        $updated = self::where('status', self::STATUS_ACTIVE)
             ->whereDate('end_date', '<', now()->toDateString())
             ->update(['status' => self::STATUS_EXPIRED]);
+
+        \Illuminate\Support\Facades\Cache::put('subscriptions_expired_synced', true, 300);
+
+        return $updated;
     }
 }

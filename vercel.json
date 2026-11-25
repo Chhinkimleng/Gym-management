@@ -37,7 +37,7 @@
         "APP_FALLBACK_LOCALE": "en",
         "LOG_CHANNEL": "stderr",
         "SESSION_DRIVER": "cookie",
-        "CACHE_STORE": "array",
+        "CACHE_STORE": "file",
         "VIEW_COMPILED_PATH": "/tmp/views"
     }
 }

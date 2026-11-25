@@ -7,8 +7,9 @@ use App\Http\Requests\UpdateMemberRequest;
 use App\Models\ActivityLog;
 use App\Models\Member;
 use App\Models\Subscription;
+use App\Support\MediaHelper;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class MemberController extends Controller
 {
@@ -44,11 +45,15 @@ class MemberController extends Controller
 
         $members = $query->paginate(12)->withQueryString();
 
+        $statusCounts = Member::select('status', DB::raw('COUNT(*) as total'))
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
         $counts = [
-            'all' => Member::count(),
-            'active' => Member::where('status', Member::STATUS_ACTIVE)->count(),
-            'inactive' => Member::where('status', Member::STATUS_INACTIVE)->count(),
-            'suspended' => Member::where('status', Member::STATUS_SUSPENDED)->count(),
+            'all' => (int) $statusCounts->sum(),
+            'active' => (int) ($statusCounts[Member::STATUS_ACTIVE] ?? 0),
+            'inactive' => (int) ($statusCounts[Member::STATUS_INACTIVE] ?? 0),
+            'suspended' => (int) ($statusCounts[Member::STATUS_SUSPENDED] ?? 0),
         ];
 
         return view('members.index', compact('members', 'counts'));
@@ -67,7 +72,7 @@ class MemberController extends Controller
         $validated['created_by'] = auth()->id();
 
         if ($request->hasFile('photo')) {
-            $validated['photo'] = $request->file('photo')->store('members', 'public');
+            $validated['photo'] = MediaHelper::storeMemberPhoto($request->file('photo'));
         }
 
         $member = Member::create($validated);
@@ -115,10 +120,7 @@ class MemberController extends Controller
         $validated = $request->validated();
 
         if ($request->hasFile('photo')) {
-            if ($member->photo && Storage::disk('public')->exists($member->photo)) {
-                Storage::disk('public')->delete($member->photo);
-            }
-            $validated['photo'] = $request->file('photo')->store('members', 'public');
+            $validated['photo'] = MediaHelper::storeMemberPhoto($request->file('photo'), $member->photo);
         }
 
         $member->update($validated);

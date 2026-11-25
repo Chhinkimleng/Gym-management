@@ -96,7 +96,7 @@
                                 <td class="px-6 py-3.5">
                                     <div class="flex items-center gap-3">
                                         @if($member->photo)
-                                            <img src="{{ asset('storage/' . $member->photo) }}" alt="{{ $member->name }}"
+                                            <img src="{{ \App\Support\MediaHelper::url($member->photo) }}" alt="{{ $member->name }}"
                                                  class="w-10 h-10 rounded-full object-cover border border-[#E8EAE3] shrink-0">
                                         @else
                                             <div class="w-10 h-10 rounded-full bg-[#171A18] text-[#C5F467] font-display font-bold text-xs flex items-center justify-center shrink-0">

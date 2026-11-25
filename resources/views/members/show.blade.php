@@ -67,7 +67,7 @@
             <div class="gym-card p-6 text-center">
                 <div class="w-28 h-28 rounded-3xl bg-[#171A18] text-[#C5F467] mx-auto flex items-center justify-center overflow-hidden border-2 border-[#E8EAE3] shadow-sm">
                     @if($member->photo)
-                        <img src="{{ asset('storage/' . $member->photo) }}" alt="{{ $member->name }}" class="w-full h-full object-cover">
+                        <img src="{{ \App\Support\MediaHelper::url($member->photo) }}" alt="{{ $member->name }}" class="w-full h-full object-cover">
                     @else
                         <span class="font-display font-extrabold text-3xl">{{ strtoupper(substr($member->name, 0, 2)) }}</span>
                     @endif

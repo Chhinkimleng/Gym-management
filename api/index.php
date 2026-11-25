@@ -14,6 +14,7 @@ foreach ($tmpDirs as $dir) {
 }
 
 $_ENV['VIEW_COMPILED_PATH'] = $_ENV['VIEW_COMPILED_PATH'] ?? '/tmp/views';
+$_ENV['CACHE_FILE_PATH'] = $_ENV['CACHE_FILE_PATH'] ?? '/tmp/cache';
 $_ENV['APP_SERVICES_CACHE'] = $_ENV['APP_SERVICES_CACHE'] ?? '/tmp/services.php';
 $_ENV['APP_PACKAGES_CACHE'] = $_ENV['APP_PACKAGES_CACHE'] ?? '/tmp/packages.php';
 $_ENV['APP_CONFIG_CACHE'] = $_ENV['APP_CONFIG_CACHE'] ?? '/tmp/config.php';

@@ -48,15 +48,22 @@ class SubscriptionController extends Controller
 
         $subscriptions = $query->latest('start_date')->paginate(15)->withQueryString();
 
+        $agg = Subscription::selectRaw("
+            COUNT(*) as all_count,
+            SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_count,
+            SUM(CASE WHEN status = 'active' AND end_date BETWEEN ? AND ? THEN 1 ELSE 0 END) as expiring_count,
+            SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) as expired_count,
+            SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_count,
+            SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_count
+        ", [now()->toDateString(), now()->addDays($noticeDays)->toDateString()])->first();
+
         $counts = [
-            'all' => Subscription::count(),
-            'active' => Subscription::where('status', Subscription::STATUS_ACTIVE)->count(),
-            'expiring' => Subscription::where('status', Subscription::STATUS_ACTIVE)
-                ->whereBetween('end_date', [now()->toDateString(), now()->addDays($noticeDays)->toDateString()])
-                ->count(),
-            'expired' => Subscription::where('status', Subscription::STATUS_EXPIRED)->count(),
-            'pending' => Subscription::where('status', Subscription::STATUS_PENDING)->count(),
-            'cancelled' => Subscription::where('status', Subscription::STATUS_CANCELLED)->count(),
+            'all' => (int) ($agg->all_count ?? 0),
+            'active' => (int) ($agg->active_count ?? 0),
+            'expiring' => (int) ($agg->expiring_count ?? 0),
+            'expired' => (int) ($agg->expired_count ?? 0),
+            'pending' => (int) ($agg->pending_count ?? 0),
+            'cancelled' => (int) ($agg->cancelled_count ?? 0),
         ];
 
         return view('subscriptions.index', compact('subscriptions', 'counts', 'noticeDays'));

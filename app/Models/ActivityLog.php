@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Cache;
 
 class ActivityLog extends Model
 {
@@ -32,6 +33,9 @@ class ActivityLog extends Model
         ?Model $subject = null,
         array $metadata = []
     ): self {
+        Cache::forget('dashboard_metrics_v1');
+        Cache::forget('header_alerts_v1');
+
         return self::create([
             'user_id' => auth()->id(),
             'action' => $action,

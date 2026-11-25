@@ -80,6 +80,10 @@ class Member extends Model
             return false;
         }
 
+        if ($this->relationLoaded('activeSubscription')) {
+            return $this->activeSubscription !== null;
+        }
+
         return $this->subscriptions()
             ->where('status', Subscription::STATUS_ACTIVE)
             ->whereDate('start_date', '<=', now()->toDateString())

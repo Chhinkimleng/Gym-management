@@ -31,7 +31,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center gap-5 pb-6 border-b border-[#E8EAE3]">
             <div id="photo-preview-box" class="w-20 h-20 rounded-2xl bg-[#171A18] text-[#C5F467] flex items-center justify-center overflow-hidden shrink-0">
                 @if($member->photo)
-                    <img src="{{ asset('storage/' . $member->photo) }}" alt="{{ $member->name }}" class="w-full h-full object-cover">
+                    <img src="{{ \App\Support\MediaHelper::url($member->photo) }}" alt="{{ $member->name }}" class="w-full h-full object-cover">
                 @else
                     <span class="font-display font-bold text-xl">{{ strtoupper(substr($member->name, 0, 2)) }}</span>
                 @endif
