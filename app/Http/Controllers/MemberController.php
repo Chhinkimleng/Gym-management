@@ -1,18 +1,57 @@
 <?php
 
-// app/Http/Controllers/MemberController.php
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreMemberRequest;
+use App\Http\Requests\UpdateMemberRequest;
+use App\Models\ActivityLog;
 use App\Models\Member;
+use App\Models\Subscription;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class MemberController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $members = Member::with('activeSubscription')->latest()->paginate(15);
-        return view('members.index', compact('members'));
+        Subscription::syncExpiredStatuses();
+
+        $query = Member::with('activeSubscription.membershipPlan');
+
+        if ($search = trim((string) $request->input('search'))) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('membership_id', 'like', "%{$search}%");
+            });
+        }
+
+        if ($status = $request->input('status')) {
+            if (in_array($status, [Member::STATUS_ACTIVE, Member::STATUS_INACTIVE, Member::STATUS_SUSPENDED], true)) {
+                $query->where('status', $status);
+            }
+        }
+
+        $sort = $request->input('sort', 'newest');
+        match ($sort) {
+            'name_asc' => $query->orderBy('name', 'asc'),
+            'name_desc' => $query->orderBy('name', 'desc'),
+            'joining_desc' => $query->orderBy('joining_date', 'desc'),
+            'joining_asc' => $query->orderBy('joining_date', 'asc'),
+            default => $query->latest(),
+        };
+
+        $members = $query->paginate(12)->withQueryString();
+
+        $counts = [
+            'all' => Member::count(),
+            'active' => Member::where('status', Member::STATUS_ACTIVE)->count(),
+            'inactive' => Member::where('status', Member::STATUS_INACTIVE)->count(),
+            'suspended' => Member::where('status', Member::STATUS_SUSPENDED)->count(),
+        ];
+
+        return view('members.index', compact('members', 'counts'));
     }
 
     public function create()
@@ -20,36 +59,50 @@ class MemberController extends Controller
         return view('members.create');
     }
 
-    public function store(Request $request)
+    public function store(StoreMemberRequest $request)
     {
-        $validated = $request->validate([
-    'name' => 'required|string|max:255',
-    'email' => 'required|email|unique:members',
-    'phone' => 'required|string|max:20',
-    'date_of_birth' => 'required|date',
-    'gender' => 'required|in:male,female,other',
-    'address' => 'nullable|string',
-    'joining_date' => 'required|date',
-    'photo' => 'nullable|image|max:2048',
-    // remove 'membership_id' from validation
-]);
+        $validated = $request->validated();
+        $validated['membership_id'] = Member::generateUniqueMembershipId();
+        $validated['status'] = $validated['status'] ?? Member::STATUS_ACTIVE;
+        $validated['created_by'] = auth()->id();
 
-// Generate unique membership ID
-$validated['membership_id'] = 'GYM' . strtoupper(\Illuminate\Support\Str::random(8));
+        if ($request->hasFile('photo')) {
+            $validated['photo'] = $request->file('photo')->store('members', 'public');
+        }
 
-if ($request->hasFile('photo')) {
-    $validated['photo'] = $request->file('photo')->store('members', 'public');
-}
+        $member = Member::create($validated);
 
-Member::create($validated);
+        ActivityLog::record(
+            'member.created',
+            "Registered new member {$member->name} ({$member->membership_id}).",
+            $member
+        );
 
-return redirect()->route('members.index')->with('success', 'Member added successfully!');
+        return redirect()->route('members.show', $member)
+            ->with('success', "Member {$member->name} registered with ID {$member->membership_id}.");
     }
 
     public function show(Member $member)
     {
-        $member->load(['subscriptions.membershipPlan', 'payments', 'attendances']);
-        return view('members.show', compact('member'));
+        Subscription::syncExpiredStatuses();
+
+        $member->load([
+            'subscriptions.membershipPlan',
+            'subscriptions.payments',
+            'payments.subscription.membershipPlan',
+            'attendances',
+            'activeSubscription.membershipPlan',
+            'activeAttendance',
+            'creator',
+        ]);
+
+        $totalPaid = max(0, round(
+            (float) $member->payments->sum('amount_paid') - (float) $member->payments->sum('refunded_amount'),
+            2
+        ));
+        $outstandingBalance = $member->outstandingBalance();
+
+        return view('members.show', compact('member', 'totalPaid', 'outstandingBalance'));
     }
 
     public function edit(Member $member)
@@ -57,39 +110,63 @@ return redirect()->route('members.index')->with('success', 'Member added success
         return view('members.edit', compact('member'));
     }
 
-    public function update(Request $request, Member $member)
-{
-    $validated = $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'required|email|unique:members,email,' . $member->id,
-        'phone' => 'required|string|max:20',
-        'date_of_birth' => 'required|date',
-        'gender' => 'required|in:male,female,other',
-        'address' => 'nullable|string',
-        'status' => 'required|in:active,inactive,suspended',
-        'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        'joining_date' => 'required|date',
-    ]);
+    public function update(UpdateMemberRequest $request, Member $member)
+    {
+        $validated = $request->validated();
 
-    // Handle file upload
-    if ($request->hasFile('photo')) {
-        $validated['photo'] = $request->file('photo')->store('members', 'public');
+        if ($request->hasFile('photo')) {
+            if ($member->photo && Storage::disk('public')->exists($member->photo)) {
+                Storage::disk('public')->delete($member->photo);
+            }
+            $validated['photo'] = $request->file('photo')->store('members', 'public');
+        }
+
+        $member->update($validated);
+
+        ActivityLog::record(
+            'member.updated',
+            "Updated profile for member {$member->name} ({$member->membership_id}).",
+            $member
+        );
+
+        return redirect()->route('members.show', $member)
+            ->with('success', 'Member information updated successfully.');
     }
 
-    $member->update($validated); // <-- update existing member
+    public function deactivate(Member $member)
+    {
+        $newStatus = $member->status === Member::STATUS_INACTIVE
+            ? Member::STATUS_ACTIVE
+            : Member::STATUS_INACTIVE;
 
-    return redirect()->route('members.show', $member)->with('success', 'Member updated successfully!');
-}
+        $member->update(['status' => $newStatus]);
 
+        ActivityLog::record(
+            'member.status_changed',
+            ucfirst($newStatus) . " member {$member->name} ({$member->membership_id}).",
+            $member
+        );
 
-    // \App\Models\Member::create($validated);
-
-    // return redirect()->route('members.index')->with('success', 'Member added successfully!');
-    // }
+        return back()->with('success', "Member status updated to " . ucfirst($newStatus) . ".");
+    }
 
     public function destroy(Member $member)
     {
+        if (!auth()->user()?->isAdmin()) {
+            abort(403, 'Only administrators can delete member records. You may deactivate the member instead.');
+        }
+
+        $name = $member->name;
+        $code = $member->membership_id;
         $member->delete();
-        return redirect()->route('members.index')->with('success', 'Member deleted successfully!');
+
+        ActivityLog::record(
+            'member.deleted',
+            "Archived member {$name} ({$code}). Historical payments and attendance preserved.",
+            $member
+        );
+
+        return redirect()->route('members.index')
+            ->with('success', "Member {$name} archived safely. Historical records remain intact.");
     }
 }

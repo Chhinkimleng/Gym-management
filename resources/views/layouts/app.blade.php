@@ -3,192 +3,261 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Gym Management') }}</title>
+    <title>@yield('title', 'Dashboard') — {{ $gymName ?? config('app.name', 'PulseCore Fitness') }}</title>
 
-    <!-- Fonts -->
-    <link rel="dns-prefetch" href="//fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=Nunito" rel="stylesheet">
+    <!-- Google Fonts: Plus Jakarta Sans + Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Scripts -->
-    {{-- @vite(['resources/sass/app.scss', 'resources/js/app.js']) --}}
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-
-    <style>
-        .sidebar {
-            min-height: 100vh;
-            background: #343a40;
-        }
-        .sidebar .nav-link {
-            color: rgba(255,255,255,.8);
-            padding: 0.75rem 1rem;
-        }
-        .sidebar .nav-link:hover {
-            color: #fff;
-            background: rgba(255,255,255,.1);
-        }
-        .sidebar .nav-link.active {
-            color: #fff;
-            background: rgba(255,255,255,.15);
-        }
-        .sidebar .nav-link i {
-            width: 20px;
-            margin-right: 0.5rem;
-        }
-        .main-content {
-            background: #f8f9fc;
-            min-height: 100vh;
-        }
-    </style>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('styles')
 </head>
-<body>
-    <div id="app">
-        <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
-            <div class="container-fluid">
-                <a class="navbar-brand" href="{{ url('/') }}">
-                    <i class="fas fa-dumbbell"></i> {{ config('app.name', 'Gym Management') }}
-                </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+<body class="bg-[#F5F5EF] text-[#202520] min-h-screen antialiased">
+@auth
+    <div id="mobile-sidebar-backdrop" class="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs hidden lg:hidden"></div>
 
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <!-- Left Side Of Navbar -->
-                    <ul class="navbar-nav me-auto">
-                    </ul>
-
-                    <!-- Right Side Of Navbar -->
-                    <ul class="navbar-nav ms-auto">
-                        @guest
-                            @if (Route::has('login'))
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
-                                </li>
-                            @endif
-
-                            @if (Route::has('register'))
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
-                                </li>
-                            @endif
-                        @else
-                            <li class="nav-item dropdown">
-                                <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
-                                    <i class="fas fa-user-circle"></i> {{ Auth::user()->name }}
-                                </a>
-
-                                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                    <a class="dropdown-item" href="{{ route('dashboard') }}">
-                                        <i class="fas fa-tachometer-alt"></i> Dashboard
-                                    </a>
-                                    <div class="dropdown-divider"></div>
-                                    <a class="dropdown-item" href="{{ route('logout') }}"
-                                       onclick="event.preventDefault();
-                                                     document.getElementById('logout-form').submit();">
-                                        <i class="fas fa-sign-out-alt"></i> {{ __('Logout') }}
-                                    </a>
-
-                                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                        @csrf
-                                    </form>
-                                </div>
-                            </li>
-                        @endguest
-                    </ul>
+    <!-- Sidebar (Dark Charcoal #171A18) -->
+    <aside id="app-sidebar"
+           class="fixed inset-y-0 left-0 z-50 w-64 bg-[#171A18] text-white flex flex-col transition-all duration-200 -translate-x-full lg:translate-x-0 border-r border-white/10">
+        <!-- Brand Header -->
+        <div class="h-16 px-4 flex items-center justify-between border-b border-white/10 shrink-0">
+            <a href="{{ route('dashboard') }}" class="flex items-center gap-3 min-w-0">
+                <div class="w-9 h-9 rounded-xl bg-[#C5F467] text-[#171A18] flex items-center justify-center shrink-0 shadow-sm">
+                    <x-icon name="dumbbell" class="w-5 h-5" />
                 </div>
+                <div class="sidebar-brand-text truncate">
+                    <div class="font-display font-bold text-sm tracking-tight text-white truncate">{{ $gymName ?? 'PulseCore Fitness' }}</div>
+                    <div class="text-[11px] text-[#858B84] font-medium">Gym Operations OS</div>
+                </div>
+            </a>
+
+            <button id="mobile-menu-close" type="button" class="lg:hidden p-1.5 rounded-lg text-[#858B84] hover:text-white hover:bg-white/10">
+                <x-icon name="x" class="w-5 h-5" />
+            </button>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+            <div class="sidebar-section-label px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[#858B84]">
+                Operations
             </div>
+
+            @php
+                $navItems = [
+                    ['route' => 'dashboard', 'pattern' => 'dashboard', 'icon' => 'layout-dashboard', 'label' => 'Dashboard'],
+                    ['route' => 'members.index', 'pattern' => 'members.*', 'icon' => 'users', 'label' => 'Members'],
+                    ['route' => 'membership-plans.index', 'pattern' => 'membership-plans.*', 'icon' => 'layers', 'label' => 'Membership Plans'],
+                    ['route' => 'memberships.index', 'pattern' => ['memberships.*', 'subscriptions.*'], 'icon' => 'id-card', 'label' => 'Memberships'],
+                    ['route' => 'payments.index', 'pattern' => 'payments.*', 'icon' => 'wallet', 'label' => 'Payments'],
+                    ['route' => 'attendance.index', 'pattern' => 'attendance.*', 'icon' => 'calendar-check', 'label' => 'Attendance'],
+                    ['route' => 'reports.index', 'pattern' => 'reports.*', 'icon' => 'bar-chart-3', 'label' => 'Reports'],
+                    ['route' => 'settings.index', 'pattern' => 'settings.*', 'icon' => 'settings', 'label' => 'Settings'],
+                ];
+            @endphp
+
+            @foreach($navItems as $item)
+                @php
+                    $patterns = (array) $item['pattern'];
+                    $active = false;
+                    foreach ($patterns as $p) {
+                        if (request()->routeIs($p)) { $active = true; break; }
+                    }
+                @endphp
+                <a href="{{ route($item['route']) }}"
+                   title="{{ $item['label'] }}"
+                   class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all {{ $active ? 'bg-[#C5F467] text-[#171A18] font-semibold shadow-sm' : 'text-[#C6CBC4] hover:bg-white/8 hover:text-white' }}">
+                    <x-icon :name="$item['icon']" class="w-5 h-5 shrink-0" />
+                    <span class="sidebar-label truncate">{{ $item['label'] }}</span>
+                </a>
+            @endforeach
         </nav>
 
-        <main class="py-0">
-            @auth
-            <div class="container-fluid">
-                <div class="row">
-                    <!-- Sidebar -->
-                    <nav class="col-md-2 d-md-block sidebar px-0">
-                        <div class="position-sticky pt-3">
-                            <ul class="nav flex-column">
-                                <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
-                                        <i class="fas fa-tachometer-alt"></i>
-                                        Dashboard
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('members.*') ? 'active' : '' }}" href="{{ route('members.index') }}">
-                                        <i class="fas fa-users"></i>
-                                        Members
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('membership-plans.*') ? 'active' : '' }}" href="{{ route('membership-plans.index') }}">
-                                        <i class="fas fa-list-alt"></i>
-                                        Membership Plans
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('payments.*') ? 'active' : '' }}" href="{{ route('payments.index') }}">
-                                        <i class="fas fa-dollar-sign"></i>
-                                        Payments
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('attendance.*') ? 'active' : '' }}" href="{{ route('attendance.index') }}">
-                                        <i class="fas fa-calendar-check"></i>
-                                        Attendance
-                                    </a>
-                                </li>
-                            </ul>
+        <!-- Sidebar Footer -->
+        <div class="p-3 border-t border-white/10 space-y-2 shrink-0">
+            <button id="sidebar-collapse-btn" type="button"
+                    class="hidden lg:flex w-full items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-[#858B84] hover:text-white hover:bg-white/8 transition">
+                <x-icon name="chevron-left" class="w-4 h-4" />
+                <span class="sidebar-label">Collapse Sidebar</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Shell -->
+    <div id="app-main-shell" class="lg:pl-64 min-h-screen flex flex-col transition-all duration-200">
+        <!-- Top Navigation -->
+        <header id="app-topbar" class="sticky top-0 z-30 h-16 bg-white/95 backdrop-blur-sm border-b border-[#E8EAE3] px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3 min-w-0">
+                <button id="mobile-menu-open" type="button" class="lg:hidden p-2 rounded-xl border border-[#E8EAE3] text-[#202520] hover:bg-[#F5F5EF]">
+                    <x-icon name="menu" class="w-5 h-5" />
+                </button>
+
+                <div class="min-w-0">
+                    <h1 class="font-display font-bold text-base sm:text-lg text-[#202520] truncate">
+                        @yield('page-title', 'Dashboard')
+                    </h1>
+                    @hasSection('breadcrumbs')
+                        <div class="hidden sm:flex items-center gap-1.5 text-xs text-[#858B84] truncate">
+                            @yield('breadcrumbs')
                         </div>
-                    </nav>
-
-                    <!-- Main Content -->
-                    <main class="col-md-10 ms-sm-auto px-md-4 main-content">
-                        <div class="py-4">
-                            @if(session('success'))
-                                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                    <i class="fas fa-check-circle"></i> {{ session('success') }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            @endif
-
-                            @if(session('error'))
-                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                    <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            @endif
-
-                            @if($errors->any())
-                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                    <i class="fas fa-exclamation-circle"></i>
-                                    <ul class="mb-0">
-                                        @foreach($errors->all() as $error)
-                                            <li>{{ $error }}</li>
-                                        @endforeach
-                                    </ul>
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            @endif
-
-                            @yield('content')
-                        </div>
-                    </main>
+                    @endif
                 </div>
             </div>
-            @else
-                @yield('content')
-            @endauth
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Quick Global Member Search -->
+                <form action="{{ route('members.index') }}" method="GET" class="hidden md:flex items-center relative">
+                    <x-icon name="search" class="w-4 h-4 text-[#858B84] absolute left-3 pointer-events-none" />
+                    <input type="text" name="search" value="{{ request()->routeIs('members.index') ? request('search') : '' }}"
+                           placeholder="Search member ID or name..."
+                           class="w-56 lg:w-64 pl-9 pr-3 py-1.5 text-sm bg-[#F5F5EF] border border-[#E8EAE3] rounded-xl text-[#202520] placeholder-[#858B84] focus:outline-none focus:bg-white focus:border-[#171A18] focus:ring-2 focus:ring-[#C5F467]/60 transition">
+                </form>
+
+                <!-- Notifications Bell -->
+                <div class="relative">
+                    <button type="button" data-dropdown-toggle="notifications-menu"
+                            class="relative p-2 rounded-xl border border-[#E8EAE3] bg-white text-[#202520] hover:bg-[#F5F5EF] transition"
+                            aria-label="Notifications">
+                        <x-icon name="bell" class="w-5 h-5" />
+                        @if(($headerAlerts ?? collect())->count() > 0)
+                            <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#FF795B] text-white text-[10px] font-bold flex items-center justify-center">
+                                {{ $headerAlerts->count() }}
+                            </span>
+                        @endif
+                    </button>
+
+                    <div id="notifications-menu" data-dropdown-menu
+                         class="hidden absolute right-0 mt-2 w-80 bg-white rounded-2xl border border-[#E8EAE3] shadow-xl overflow-hidden z-50">
+                        <div class="px-4 py-3 border-b border-[#E8EAE3] flex items-center justify-between bg-[#F5F5EF]/60">
+                            <span class="font-display font-bold text-sm text-[#202520]">Alerts & Reminders</span>
+                            <span class="badge-pill badge-lime">{{ ($headerAlerts ?? collect())->count() }}</span>
+                        </div>
+                        <div class="max-h-80 overflow-y-auto divide-y divide-[#E8EAE3]">
+                            @forelse($headerAlerts ?? [] as $alert)
+                                <a href="{{ $alert['url'] }}" class="flex items-start gap-3 px-4 py-3 hover:bg-[#F5F5EF]/70 transition">
+                                    <span class="mt-0.5 w-2 h-2 rounded-full shrink-0 {{ $alert['type'] === 'danger' ? 'bg-[#E76B62]' : 'bg-[#F2B84B]' }}"></span>
+                                    <div class="min-w-0">
+                                        <p class="text-xs font-semibold text-[#202520] truncate">{{ $alert['title'] }}</p>
+                                        <p class="text-xs text-[#858B84] truncate">{{ $alert['subtitle'] }}</p>
+                                    </div>
+                                </a>
+                            @empty
+                                <div class="px-4 py-8 text-center text-xs text-[#858B84]">
+                                    All caught up. No urgent membership or payment alerts.
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Profile Dropdown -->
+                <div class="relative">
+                    <button type="button" data-dropdown-toggle="profile-menu"
+                            class="flex items-center gap-2.5 pl-1.5 pr-2.5 py-1 rounded-xl border border-[#E8EAE3] bg-white hover:bg-[#F5F5EF] transition">
+                        <div class="w-8 h-8 rounded-lg bg-[#171A18] text-[#C5F467] font-display font-bold text-xs flex items-center justify-center">
+                            {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
+                        </div>
+                        <div class="hidden sm:block text-left leading-tight">
+                            <div class="text-xs font-semibold text-[#202520] max-w-[120px] truncate">{{ Auth::user()->name }}</div>
+                            <div class="text-[10px] font-medium text-[#858B84] uppercase tracking-wide">{{ Auth::user()->role }}</div>
+                        </div>
+                        <x-icon name="chevron-down" class="w-4 h-4 text-[#858B84]" />
+                    </button>
+
+                    <div id="profile-menu" data-dropdown-menu
+                         class="hidden absolute right-0 mt-2 w-56 bg-white rounded-2xl border border-[#E8EAE3] shadow-xl overflow-hidden z-50">
+                        <div class="px-4 py-3 border-b border-[#E8EAE3] bg-[#F5F5EF]/60">
+                            <div class="text-xs font-bold text-[#202520] truncate">{{ Auth::user()->name }}</div>
+                            <div class="text-[11px] text-[#858B84] truncate">{{ Auth::user()->email }}</div>
+                        </div>
+                        <div class="p-1.5 space-y-0.5">
+                            <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-[#202520] hover:bg-[#F5F5EF]">
+                                <x-icon name="layout-dashboard" class="w-4 h-4 text-[#858B84]" /> Dashboard
+                            </a>
+                            <a href="{{ route('settings.index') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-[#202520] hover:bg-[#F5F5EF]">
+                                <x-icon name="settings" class="w-4 h-4 text-[#858B84]" /> Account & Settings
+                            </a>
+                            <div class="my-1 border-t border-[#E8EAE3]"></div>
+                            <form action="{{ route('logout') }}" method="POST" data-no-loading>
+                                @csrf
+                                <button type="submit" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-[#C0392B] hover:bg-[#E76B62]/10 cursor-pointer">
+                                    <x-icon name="log-out" class="w-4 h-4" /> Logout
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Page Content -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-[1600px] w-full mx-auto">
+            @if(session('success'))
+                <div data-auto-dismiss class="mb-5 flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-[#4CAF78]/12 border border-[#4CAF78]/30 text-[#1F6A40] text-sm font-medium transition-opacity duration-300">
+                    <div class="flex items-center gap-2.5">
+                        <x-icon name="check-circle" class="w-5 h-5 text-[#4CAF78] shrink-0" />
+                        <span>{{ session('success') }}</span>
+                    </div>
+                    <button type="button" onclick="this.parentElement.remove()" class="p-1 rounded-lg hover:bg-[#4CAF78]/15">
+                        <x-icon name="x" class="w-4 h-4" />
+                    </button>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div data-auto-dismiss class="mb-5 flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-[#E76B62]/12 border border-[#E76B62]/30 text-[#A83229] text-sm font-medium transition-opacity duration-300">
+                    <div class="flex items-center gap-2.5">
+                        <x-icon name="alert-circle" class="w-5 h-5 text-[#E76B62] shrink-0" />
+                        <span>{{ session('error') }}</span>
+                    </div>
+                    <button type="button" onclick="this.parentElement.remove()" class="p-1 rounded-lg hover:bg-[#E76B62]/15">
+                        <x-icon name="x" class="w-4 h-4" />
+                    </button>
+                </div>
+            @endif
+
+            @if($errors->any())
+                <div class="mb-5 px-4 py-3.5 rounded-2xl bg-[#E76B62]/12 border border-[#E76B62]/30 text-[#A83229] text-sm">
+                    <div class="flex items-center gap-2 font-semibold mb-1.5">
+                        <x-icon name="alert-triangle" class="w-4 h-4 text-[#E76B62]" />
+                        <span>Please fix the following issues:</span>
+                    </div>
+                    <ul class="list-disc pl-6 space-y-0.5 text-xs">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            @yield('content')
         </main>
     </div>
 
-    @stack('scripts')
+    <!-- Global Accessible Confirmation Modal -->
+    <div id="global-confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+        <div class="bg-white rounded-2xl border border-[#E8EAE3] shadow-2xl max-w-md w-full p-6">
+            <div class="flex items-start gap-3 mb-4">
+                <div class="w-10 h-10 rounded-xl bg-[#FF795B]/15 text-[#FF795B] flex items-center justify-center shrink-0">
+                    <x-icon name="alert-triangle" class="w-5 h-5" />
+                </div>
+                <div>
+                    <h3 id="confirm-modal-title" class="font-display font-bold text-base text-[#202520]">Confirm Action</h3>
+                    <p id="confirm-modal-message" class="text-sm text-[#858B84] mt-1">Are you sure you want to continue?</p>
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-2.5">
+                <button id="confirm-modal-cancel" type="button" class="btn-outline">Cancel</button>
+                <button id="confirm-modal-ok" type="button" class="btn-coral">Confirm</button>
+            </div>
+        </div>
+    </div>
+@else
+    @yield('content')
+@endauth
+
+@stack('scripts')
 </body>
 </html>

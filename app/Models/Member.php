@@ -1,18 +1,37 @@
 <?php
 
-// app/Models/Member.php
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Member extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
+
+    public const STATUS_ACTIVE = 'active';
+    public const STATUS_INACTIVE = 'inactive';
+    public const STATUS_SUSPENDED = 'suspended';
 
     protected $fillable = [
-        'membership_id', 'name', 'email', 'phone', 'date_of_birth',
-        'gender', 'address', 'photo', 'joining_date', 'status'
+        'membership_id',
+        'name',
+        'email',
+        'phone',
+        'date_of_birth',
+        'gender',
+        'address',
+        'emergency_contact_name',
+        'emergency_contact_phone',
+        'notes',
+        'photo',
+        'joining_date',
+        'status',
+        'created_by',
     ];
 
     protected $casts = [
@@ -20,25 +39,67 @@ class Member extends Model
         'joining_date' => 'date',
     ];
 
-    public function subscriptions()
+    public function subscriptions(): HasMany
     {
-        return $this->hasMany(Subscription::class);
+        return $this->hasMany(Subscription::class)->latest('start_date');
     }
 
-    public function payments()
+    public function payments(): HasMany
     {
-        return $this->hasMany(Payment::class);
+        return $this->hasMany(Payment::class)->latest('payment_date');
     }
 
-    public function attendances()
+    public function attendances(): HasMany
     {
-        return $this->hasMany(Attendance::class);
+        return $this->hasMany(Attendance::class)->latest('check_in');
     }
 
-    public function activeSubscription()
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function activeSubscription(): HasOne
     {
         return $this->hasOne(Subscription::class)
-            ->where('status', 'active')
-            ->where('end_date', '>=', now());
+            ->where('status', Subscription::STATUS_ACTIVE)
+            ->whereDate('end_date', '>=', now()->toDateString())
+            ->latest('end_date');
+    }
+
+    public function activeAttendance(): HasOne
+    {
+        return $this->hasOne(Attendance::class)
+            ->whereNull('check_out')
+            ->latest('check_in');
+    }
+
+    public function isEligibleForCheckIn(): bool
+    {
+        if ($this->status !== self::STATUS_ACTIVE) {
+            return false;
+        }
+
+        return $this->subscriptions()
+            ->where('status', Subscription::STATUS_ACTIVE)
+            ->whereDate('start_date', '<=', now()->toDateString())
+            ->whereDate('end_date', '>=', now()->toDateString())
+            ->exists();
+    }
+
+    public function outstandingBalance(): float
+    {
+        return (float) $this->payments()
+            ->whereIn('status', [Payment::STATUS_PENDING, Payment::STATUS_PARTIALLY_PAID])
+            ->sum('remaining_balance');
+    }
+
+    public static function generateUniqueMembershipId(): string
+    {
+        do {
+            $id = 'GYM-' . now()->format('ym') . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 5));
+        } while (self::withTrashed()->where('membership_id', $id)->exists());
+
+        return $id;
     }
 }

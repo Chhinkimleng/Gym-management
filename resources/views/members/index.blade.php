@@ -1,149 +1,189 @@
 @extends('layouts.app')
 
+@section('title', 'Members')
+@section('page-title', 'Members')
+@section('breadcrumbs')
+    <a href="{{ route('dashboard') }}" class="hover:text-[#202520]">Dashboard</a>
+    <span>/</span>
+    <span class="text-[#202520] font-medium">Members</span>
+@endsection
+
 @section('content')
-<div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <h2>Members Management</h2>
-            <p class="text-muted">Manage all gym members</p>
+<div class="space-y-5">
+    <!-- Header Row -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h2 class="font-display font-bold text-2xl text-[#202520]">Member Directory</h2>
+            <p class="text-sm text-[#858B84]">Manage member profiles, status, and active plans.</p>
         </div>
-        <div class="col-md-6 text-end">
-            <a href="{{ route('members.create') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Add New Member
-            </a>
-        </div>
+        <a href="{{ route('members.create') }}" class="btn-lime shrink-0">
+            <x-icon name="user-plus" class="w-4 h-4" />
+            <span>Add New Member</span>
+        </a>
     </div>
 
-    <!-- Search and Filter -->
-    <div class="card shadow mb-4">
-        <div class="card-body">
-            <form method="GET" action="{{ route('members.index') }}" class="row g-3">
-                <div class="col-md-4">
-                    <input type="text" name="search" class="form-control" placeholder="Search by name or email..." value="{{ request('search') }}">
-                </div>
-                <div class="col-md-3">
-                    <select name="status" class="form-control">
-                        <option value="">All Status</option>
-                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
-                        <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
-                        <option value="suspended" {{ request('status') == 'suspended' ? 'selected' : '' }}>Suspended</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-search"></i> Search
-                    </button>
-                    <a href="{{ route('members.index') }}" class="btn btn-secondary">
-                        <i class="fas fa-redo"></i> Reset
-                    </a>
-                </div>
-            </form>
+    <!-- Status Filter Pills & Search -->
+    <div class="gym-card p-4 space-y-4">
+        <div class="flex flex-wrap items-center gap-2">
+            @php $currentStatus = request('status', ''); @endphp
+            <a href="{{ route('members.index', array_filter(['search' => request('search'), 'sort' => request('sort')])) }}"
+               class="px-3.5 py-1.5 rounded-full text-xs font-semibold transition {{ $currentStatus === '' ? 'bg-[#171A18] text-[#C5F467]' : 'bg-[#F5F5EF] text-[#565C55] hover:bg-[#E8EAE3]' }}">
+                All ({{ $counts['all'] }})
+            </a>
+            <a href="{{ route('members.index', array_filter(['status' => 'active', 'search' => request('search'), 'sort' => request('sort')])) }}"
+               class="px-3.5 py-1.5 rounded-full text-xs font-semibold transition {{ $currentStatus === 'active' ? 'bg-[#171A18] text-[#C5F467]' : 'bg-[#F5F5EF] text-[#565C55] hover:bg-[#E8EAE3]' }}">
+                Active ({{ $counts['active'] }})
+            </a>
+            <a href="{{ route('members.index', array_filter(['status' => 'inactive', 'search' => request('search'), 'sort' => request('sort')])) }}"
+               class="px-3.5 py-1.5 rounded-full text-xs font-semibold transition {{ $currentStatus === 'inactive' ? 'bg-[#171A18] text-[#C5F467]' : 'bg-[#F5F5EF] text-[#565C55] hover:bg-[#E8EAE3]' }}">
+                Inactive ({{ $counts['inactive'] }})
+            </a>
+            <a href="{{ route('members.index', array_filter(['status' => 'suspended', 'search' => request('search'), 'sort' => request('sort')])) }}"
+               class="px-3.5 py-1.5 rounded-full text-xs font-semibold transition {{ $currentStatus === 'suspended' ? 'bg-[#171A18] text-[#C5F467]' : 'bg-[#F5F5EF] text-[#565C55] hover:bg-[#E8EAE3]' }}">
+                Suspended ({{ $counts['suspended'] }})
+            </a>
         </div>
+
+        <form method="GET" action="{{ route('members.index') }}" class="grid grid-cols-1 md:grid-cols-12 gap-3" data-no-loading>
+            @if(request('status'))
+                <input type="hidden" name="status" value="{{ request('status') }}">
+            @endif
+            <div class="md:col-span-6 relative">
+                <x-icon name="search" class="w-4 h-4 text-[#858B84] absolute left-3.5 top-3 pointer-events-none" />
+                <input type="text" name="search" value="{{ request('search') }}"
+                       placeholder="Search by Member ID, name, email, or phone..."
+                       class="gym-input pl-10">
+            </div>
+            <div class="md:col-span-3">
+                <select name="sort" class="gym-input">
+                    <option value="newest" {{ request('sort', 'newest') === 'newest' ? 'selected' : '' }}>Newest Registered</option>
+                    <option value="name_asc" {{ request('sort') === 'name_asc' ? 'selected' : '' }}>Name (A &rarr; Z)</option>
+                    <option value="name_desc" {{ request('sort') === 'name_desc' ? 'selected' : '' }}>Name (Z &rarr; A)</option>
+                    <option value="joining_desc" {{ request('sort') === 'joining_desc' ? 'selected' : '' }}>Joining Date (Newest)</option>
+                    <option value="joining_asc" {{ request('sort') === 'joining_asc' ? 'selected' : '' }}>Joining Date (Oldest)</option>
+                </select>
+            </div>
+            <div class="md:col-span-3 flex items-center gap-2">
+                <button type="submit" class="btn-dark flex-1">Apply</button>
+                @if(request()->hasAny(['search', 'status', 'sort']))
+                    <a href="{{ route('members.index') }}" class="btn-outline" title="Reset filters">
+                        <x-icon name="rotate-ccw" class="w-4 h-4" />
+                    </a>
+                @endif
+            </div>
+        </form>
     </div>
 
     <!-- Members Table -->
-    <div class="card shadow">
-        <div class="card-body">
-            @if($members->count() > 0)
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
+    <div class="gym-card overflow-hidden">
+        @if($members->count() > 0)
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-[#F5F5EF] border-b border-[#E8EAE3] text-xs uppercase tracking-wider text-[#858B84]">
                         <tr>
-                            <th>Photo</th>
-                            <th>Member ID</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Joining Date</th>
-                            <th>Status</th>
-                            <th>Subscription</th>
-                            <th>Actions</th>
+                            <th class="text-left px-6 py-3.5 font-semibold">Member</th>
+                            <th class="text-left px-4 py-3.5 font-semibold">Member ID</th>
+                            <th class="text-left px-4 py-3.5 font-semibold">Contact</th>
+                            <th class="text-left px-4 py-3.5 font-semibold">Current Plan</th>
+                            <th class="text-left px-4 py-3.5 font-semibold">Joined</th>
+                            <th class="text-left px-4 py-3.5 font-semibold">Status</th>
+                            <th class="text-right px-6 py-3.5 font-semibold">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="divide-y divide-[#E8EAE3]">
                         @foreach($members as $member)
-                        <tr>
-                            <td>
-                                @if($member->photo)
-                                    <img src="{{ asset('storage/' . $member->photo) }}" alt="{{ $member->name }}" 
-                                         class="rounded-circle" width="40" height="40">
-                                @else
-                                    <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white" 
-                                         style="width: 40px; height: 40px;">
-                                        {{ strtoupper(substr($member->name, 0, 1)) }}
+                            <tr class="hover:bg-[#F5F5EF]/50 transition">
+                                <td class="px-6 py-3.5">
+                                    <div class="flex items-center gap-3">
+                                        @if($member->photo)
+                                            <img src="{{ asset('storage/' . $member->photo) }}" alt="{{ $member->name }}"
+                                                 class="w-10 h-10 rounded-full object-cover border border-[#E8EAE3] shrink-0">
+                                        @else
+                                            <div class="w-10 h-10 rounded-full bg-[#171A18] text-[#C5F467] font-display font-bold text-xs flex items-center justify-center shrink-0">
+                                                {{ strtoupper(substr($member->name, 0, 2)) }}
+                                            </div>
+                                        @endif
+                                        <div>
+                                            <a href="{{ route('members.show', $member) }}" class="font-semibold text-[#202520] hover:underline">
+                                                {{ $member->name }}
+                                            </a>
+                                            <div class="text-xs text-[#858B84]">{{ ucfirst($member->gender) }}</div>
+                                        </div>
                                     </div>
-                                @endif
-                            </td>
-                            <td><strong>{{ $member->membership_id }}</strong></td>
-                            <td>{{ $member->name }}</td>
-                            <td>{{ $member->email }}</td>
-                            <td>{{ $member->phone }}</td>
-                            <td>{{ $member->joining_date->format('M d, Y') }}</td>
-                            <td>
-                                @if($member->status == 'active')
-                                    <span class="badge bg-success">Active</span>
-                                @elseif($member->status == 'inactive')
-                                    <span class="badge bg-secondary">Inactive</span>
-                                @else
-                                    <span class="badge bg-danger">Suspended</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($member->activeSubscription)
-                                    <span class="badge bg-info">
-                                        {{ $member->activeSubscription->membershipPlan->name }}
-                                    </span>
-                                    <br>
-                                    <small class="text-muted">
-                                        Expires: {{ $member->activeSubscription->end_date->format('M d, Y') }}
-                                    </small>
-                                @else
-                                    <span class="badge bg-warning">No Active Plan</span>
-                                @endif
-                            </td>
-                            <td>
-                                <div class="btn-group" role="group">
-                                    <a href="{{ route('members.show', $member) }}" 
-                                       class="btn btn-sm btn-info" title="View">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{{ route('members.edit', $member) }}" 
-                                       class="btn btn-sm btn-warning" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <form action="{{ route('members.destroy', $member) }}" 
-                                          method="POST" 
-                                          onsubmit="return confirm('Are you sure you want to delete this member?')"
-                                          class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" title="Delete">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
+                                </td>
+                                <td class="px-4 py-3.5 font-mono text-xs font-semibold text-[#202520]">
+                                    {{ $member->membership_id }}
+                                </td>
+                                <td class="px-4 py-3.5">
+                                    <div class="text-xs font-medium text-[#202520]">{{ $member->phone }}</div>
+                                    <div class="text-xs text-[#858B84]">{{ $member->email }}</div>
+                                </td>
+                                <td class="px-4 py-3.5">
+                                    @if($member->activeSubscription)
+                                        <span class="badge-pill badge-lime">{{ $member->activeSubscription->effectivePlanName() }}</span>
+                                        <div class="text-[11px] text-[#858B84] mt-1">
+                                            Ends {{ $member->activeSubscription->end_date->format('M d, Y') }}
+                                        </div>
+                                    @else
+                                        <span class="badge-pill badge-warning">No Active Plan</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3.5 text-xs text-[#565C55]">
+                                    {{ $member->joining_date->format('M d, Y') }}
+                                </td>
+                                <td class="px-4 py-3.5">
+                                    @php
+                                        $badge = match($member->status) {
+                                            'active' => 'badge-success',
+                                            'inactive' => 'badge-neutral',
+                                            default => 'badge-danger',
+                                        };
+                                    @endphp
+                                    <span class="badge-pill {{ $badge }}">{{ ucfirst($member->status) }}</span>
+                                </td>
+                                <td class="px-6 py-3.5 text-right">
+                                    <div class="inline-flex items-center gap-1.5">
+                                        <a href="{{ route('members.show', $member) }}" class="p-2 rounded-lg border border-[#E8EAE3] text-[#202520] hover:bg-[#F5F5EF]" title="View Profile">
+                                            <x-icon name="eye" class="w-4 h-4" />
+                                        </a>
+                                        <a href="{{ route('members.edit', $member) }}" class="p-2 rounded-lg border border-[#E8EAE3] text-[#202520] hover:bg-[#F5F5EF]" title="Edit Member">
+                                            <x-icon name="edit" class="w-4 h-4" />
+                                        </a>
+                                        @if(Auth::user()->isAdmin())
+                                            <form action="{{ route('members.destroy', $member) }}" method="POST"
+                                                  data-confirm="Archive {{ $member->name }}? Historical payments and attendance records will remain preserved."
+                                                  data-confirm-title="Archive Member">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="p-2 rounded-lg border border-[#E8EAE3] text-[#B83A31] hover:bg-[#E76B62]/10 cursor-pointer" title="Archive Member">
+                                                    <x-icon name="trash-2" class="w-4 h-4" />
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
 
-            <!-- Pagination -->
-            <div class="mt-3">
+            <div class="px-6 py-4 border-t border-[#E8EAE3]">
                 {{ $members->links() }}
             </div>
-            @else
-            <div class="text-center py-5">
-                <i class="fas fa-users fa-3x text-muted mb-3"></i>
-                <h4>No Members Found</h4>
-                <p class="text-muted">Start by adding your first member</p>
-                <a href="{{ route('members.create') }}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Add New Member
+        @else
+            <div class="px-6 py-16 text-center">
+                <div class="w-14 h-14 rounded-2xl bg-[#F5F5EF] border border-[#E8EAE3] text-[#858B84] flex items-center justify-center mx-auto mb-3">
+                    <x-icon name="users" class="w-7 h-7" />
+                </div>
+                <h3 class="font-display font-bold text-lg text-[#202520]">No members found</h3>
+                <p class="text-sm text-[#858B84] mt-1 mb-5">Try adjusting your search criteria or register your first gym member.</p>
+                <a href="{{ route('members.create') }}" class="btn-lime">
+                    <x-icon name="user-plus" class="w-4 h-4" />
+                    <span>Add New Member</span>
                 </a>
             </div>
-            @endif
-        </div>
+        @endif
     </div>
 </div>
 @endsection

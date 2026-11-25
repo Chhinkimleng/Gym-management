@@ -1,132 +1,184 @@
 <?php
 
-
-
 namespace App\Http\Controllers;
 
-use App\Models\Member;
-use App\Models\Subscription;
-use App\Models\Payment;
 use App\Models\Attendance;
+use App\Models\Member;
 use App\Models\MembershipPlan;
-use Illuminate\Http\Request;
-use Carbon\Carbon;
+use App\Models\Payment;
+use App\Models\Setting;
+use App\Models\Subscription;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // Get statistics
+        Subscription::syncExpiredStatuses();
+
+        $noticeDays = max(1, (int) Setting::getValue('expiring_notice_days', 7));
+
+        // 7 Core KPIs from real database records
         $totalMembers = Member::count();
-        $activeMembers = Member::where('status', 'active')->count();
-        $inactiveMembers = Member::where('status', 'inactive')->count();
-        
-        // Active subscriptions (not expired)
-        $activeSubscriptions = Subscription::where('status', 'active')
-            ->where('end_date', '>=', now())
+        $activeMembers = Member::where('status', Member::STATUS_ACTIVE)->count();
+        $inactiveMembers = Member::where('status', '!=', Member::STATUS_ACTIVE)->count();
+
+        $activeSubscriptions = Subscription::where('status', Subscription::STATUS_ACTIVE)
+            ->whereDate('end_date', '>=', now()->toDateString())
             ->count();
-        
-        // Expiring soon (within 7 days)
-        $expiringSoon = Subscription::where('status', 'active')
-            ->whereBetween('end_date', [now(), now()->addDays(7)])
+
+        $expiredMemberships = Subscription::where('status', Subscription::STATUS_EXPIRED)->count();
+
+        $newMembersThisMonth = Member::whereMonth('joining_date', now()->month)
+            ->whereYear('joining_date', now()->year)
             ->count();
-        
-        // Today's attendance
+
+        $lastMonth = now()->copy()->subMonthNoOverflow();
+        $newMembersLastMonth = Member::whereMonth('joining_date', $lastMonth->month)
+            ->whereYear('joining_date', $lastMonth->year)
+            ->count();
+
+        $monthlyRevenue = max(0, round(
+            (float) Payment::whereIn('status', [Payment::STATUS_PAID, Payment::STATUS_PARTIALLY_PAID, Payment::STATUS_REFUNDED])
+                ->whereMonth('payment_date', now()->month)
+                ->whereYear('payment_date', now()->year)
+                ->sum('amount_paid')
+            - (float) Payment::whereMonth('payment_date', now()->month)
+                ->whereYear('payment_date', now()->year)
+                ->sum('refunded_amount'),
+            2
+        ));
+
+        $lastMonthRevenue = max(0, round(
+            (float) Payment::whereIn('status', [Payment::STATUS_PAID, Payment::STATUS_PARTIALLY_PAID, Payment::STATUS_REFUNDED])
+                ->whereMonth('payment_date', $lastMonth->month)
+                ->whereYear('payment_date', $lastMonth->year)
+                ->sum('amount_paid')
+            - (float) Payment::whereMonth('payment_date', $lastMonth->month)
+                ->whereYear('payment_date', $lastMonth->year)
+                ->sum('refunded_amount'),
+            2
+        ));
+
+        $revenueGrowthPct = $lastMonthRevenue > 0
+            ? round((($monthlyRevenue - $lastMonthRevenue) / $lastMonthRevenue) * 100, 1)
+            : null;
+
+        $todayRevenue = max(0, round(
+            (float) Payment::whereDate('payment_date', today())->sum('amount_paid')
+            - (float) Payment::whereDate('payment_date', today())->sum('refunded_amount'),
+            2
+        ));
+
+        $pendingPaymentsCount = Payment::whereIn('status', [Payment::STATUS_PENDING, Payment::STATUS_PARTIALLY_PAID])
+            ->where('remaining_balance', '>', 0)
+            ->count();
+
+        $pendingPaymentsAmount = round((float) Payment::whereIn('status', [Payment::STATUS_PENDING, Payment::STATUS_PARTIALLY_PAID])
+            ->sum('remaining_balance'), 2);
+
         $todayAttendance = Attendance::whereDate('check_in', today())->count();
-        
-        // This month's revenue
-        $monthlyRevenue = Payment::where('status', 'paid')
-            ->whereMonth('payment_date', now()->month)
-            ->whereYear('payment_date', now()->year)
-            ->sum('amount');
-        
-        // Today's revenue
-        $todayRevenue = Payment::where('status', 'paid')
-            ->whereDate('payment_date', today())
-            ->sum('amount');
-        
-        // Recent members (last 5)
+        $yesterdayAttendance = Attendance::whereDate('check_in', today()->subDay())->count();
+        $currentlyCheckedIn = Attendance::whereNull('check_out')->count();
+
+        $expiringSoon = Subscription::where('status', Subscription::STATUS_ACTIVE)
+            ->whereBetween('end_date', [now()->toDateString(), now()->addDays($noticeDays)->toDateString()])
+            ->count();
+
+        // Recent activity lists
         $recentMembers = Member::with('activeSubscription.membershipPlan')
             ->latest()
             ->take(5)
             ->get();
-        
-        // Recent payments (last 5)
+
         $recentPayments = Payment::with(['member', 'subscription.membershipPlan'])
-            ->where('status', 'paid')
-            ->latest()
+            ->latest('payment_date')
             ->take(5)
             ->get();
-        // $recentPayments = \App\Models\Payment::with('member')
-        //             ->latest()
-        //             ->take(5)
-        //             ->get();
 
-        // Today's attendance list
-        $todayAttendanceList = Attendance::with('member')
-            ->whereDate('check_in', today())
-            ->latest()
-            ->take(10)
-            ->get();
-        
-        // Members with expiring subscriptions (next 7 days)
         $expiringMembers = Subscription::with(['member', 'membershipPlan'])
-            ->where('status', 'active')
-            ->whereBetween('end_date', [now(), now()->addDays(7)])
-            ->orderBy('end_date', 'asc')
+            ->where('status', Subscription::STATUS_ACTIVE)
+            ->whereBetween('end_date', [now()->toDateString(), now()->addDays($noticeDays)->toDateString()])
+            ->orderBy('end_date')
+            ->take(6)
             ->get();
-        
-        // Monthly revenue chart data (last 6 months)
-        $monthlyRevenueData = [];
+
+        $todayAttendanceList = Attendance::with('member')
+            ->latest('check_in')
+            ->take(6)
+            ->get();
+
+        // Monthly revenue & member registration trends (last 6 months)
         $monthlyLabels = [];
-        
-        for ($i = 5; $i >= 0; $i--) {
-            $date = now()->subMonths($i);
-            $monthlyLabels[] = $date->format('M Y');
-            $monthlyRevenueData[] = Payment::where('status', 'paid')
-                ->whereMonth('payment_date', $date->month)
-                ->whereYear('payment_date', $date->year)
-                ->sum('amount');
-        }
-        
-        // Member growth chart data (last 6 months)
+        $monthlyRevenueData = [];
+        $newMembersTrend = [];
         $memberGrowthData = [];
-        
+
         for ($i = 5; $i >= 0; $i--) {
-            $date = now()->subMonths($i);
-            $memberGrowthData[] = Member::whereYear('joining_date', '<=', $date->year)
-                ->whereMonth('joining_date', '<=', $date->month)
-                ->count();
+            $monthDate = now()->copy()->startOfMonth()->subMonths($i);
+            $monthEnd = $monthDate->copy()->endOfMonth();
+            $monthlyLabels[] = $monthDate->format('M Y');
+
+            $rev = (float) Payment::whereBetween('payment_date', [$monthDate->copy()->startOfDay(), $monthEnd->copy()->endOfDay()])
+                ->sum('amount_paid')
+                - (float) Payment::whereBetween('payment_date', [$monthDate->copy()->startOfDay(), $monthEnd->copy()->endOfDay()])
+                ->sum('refunded_amount');
+            $monthlyRevenueData[] = max(0, round($rev, 2));
+
+            $newMembersTrend[] = Member::whereBetween('joining_date', [$monthDate->toDateString(), $monthEnd->toDateString()])->count();
+            $memberGrowthData[] = Member::whereDate('joining_date', '<=', $monthEnd->toDateString())->count();
         }
-        
-        // Attendance trend (last 7 days)
-        $attendanceData = [];
+
+        // Weekly attendance chart (last 7 days)
         $attendanceLabels = [];
-        
+        $attendanceData = [];
         for ($i = 6; $i >= 0; $i--) {
-            $date = now()->subDays($i);
-            $attendanceLabels[] = $date->format('D, M j');
-            $attendanceData[] = Attendance::whereDate('check_in', $date)->count();
+            $day = now()->copy()->subDays($i);
+            $attendanceLabels[] = $day->format('D');
+            $attendanceData[] = Attendance::whereDate('check_in', $day->toDateString())->count();
         }
+
+        // Membership distribution across active plans
+        $planDistribution = MembershipPlan::withCount(['activeSubscriptions'])
+            ->orderByDesc('active_subscriptions_count')
+            ->get()
+            ->filter(fn ($plan) => $plan->active_subscriptions_count > 0 || $plan->is_active)
+            ->values();
+
+        $distributionLabels = $planDistribution->pluck('name')->toArray();
+        $distributionCounts = $planDistribution->pluck('active_subscriptions_count')->toArray();
 
         return view('dashboard', compact(
             'totalMembers',
             'activeMembers',
             'inactiveMembers',
             'activeSubscriptions',
+            'expiredMemberships',
+            'newMembersThisMonth',
+            'newMembersLastMonth',
             'expiringSoon',
+            'noticeDays',
             'todayAttendance',
+            'yesterdayAttendance',
+            'currentlyCheckedIn',
             'monthlyRevenue',
+            'lastMonthRevenue',
+            'revenueGrowthPct',
             'todayRevenue',
+            'pendingPaymentsCount',
+            'pendingPaymentsAmount',
             'recentMembers',
             'recentPayments',
             'todayAttendanceList',
             'expiringMembers',
-            'monthlyRevenueData',
             'monthlyLabels',
+            'monthlyRevenueData',
+            'newMembersTrend',
             'memberGrowthData',
+            'attendanceLabels',
             'attendanceData',
-            'attendanceLabels'
+            'distributionLabels',
+            'distributionCounts'
         ));
     }
 }
