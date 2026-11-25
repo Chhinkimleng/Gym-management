@@ -1,0 +1,10 @@
+/vendor
+/node_modules
+/.env
+/.env.backup
+/.env.production
+/.phpunit.cache
+/tests
+composer.phar
+composer-setup.php
+Dockerfile
