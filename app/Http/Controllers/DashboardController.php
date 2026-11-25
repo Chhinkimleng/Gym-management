@@ -159,8 +159,8 @@ class DashboardController extends Controller
                 ->take(6)
                 ->get();
 
-            $planDistribution = MembershipPlan::withCount('activeSubscriptions')
-                ->select(['id', 'name', 'is_active'])
+            $planDistribution = MembershipPlan::select(['id', 'name', 'is_active'])
+                ->withCount('activeSubscriptions')
                 ->orderByDesc('active_subscriptions_count')
                 ->get()
                 ->filter(fn ($plan) => $plan->active_subscriptions_count > 0 || $plan->is_active)
