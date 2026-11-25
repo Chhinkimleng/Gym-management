@@ -4,7 +4,19 @@
     <meta charset="UTF-8">
     <title>Gym Report {{ $from }} to {{ $to }}</title>
     <style>
-        body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #202520; padding: 20px; }
+        @font-face {
+            font-family: 'NotoSansKhmer';
+            font-style: normal;
+            font-weight: normal;
+            src: url("{{ storage_path('fonts/NotoSansKhmer-Regular.ttf') }}") format('truetype');
+        }
+        @font-face {
+            font-family: 'NotoSansKhmer';
+            font-style: normal;
+            font-weight: bold;
+            src: url("{{ storage_path('fonts/NotoSansKhmer-Bold.ttf') }}") format('truetype');
+        }
+        body { font-family: 'NotoSansKhmer', DejaVu Sans, sans-serif; font-size: 11px; color: #202520; padding: 20px; }
         .top { background: #171A18; color: #FFFFFF; padding: 16px 20px; border-radius: 8px; margin-bottom: 16px; }
         .top h1 { margin: 0 0 4px 0; font-size: 18px; color: #C5F467; }
         .summary { width: 100%; border-collapse: collapse; margin-bottom: 18px; }

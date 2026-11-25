@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Memberships')
-@section('page-title', 'Memberships')
+@section('title', __('Memberships'))
+@section('page-title', __('Memberships'))
 @section('breadcrumbs')
-    <a href="{{ route('dashboard') }}" class="hover:text-[#202520]">Dashboard</a>
+    <a href="{{ route('dashboard') }}" class="hover:text-[#202520]">{{ __('Dashboard') }}</a>
     <span>/</span>
-    <span class="text-[#202520] font-medium">Memberships</span>
+    <span class="text-[#202520] font-medium">{{ __('Memberships') }}</span>
 @endsection
 
 @section('content')
@@ -14,11 +14,11 @@
 <div class="space-y-5">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <h2 class="font-display font-bold text-2xl text-[#202520]">Memberships &amp; Renewals</h2>
+            <h2 class="font-display font-bold text-2xl text-[#202520]">{{ __('Memberships & Renewals') }}</h2>
             <p class="text-sm text-[#858B84]">Track active contracts, upcoming expirations, and membership history.</p>
         </div>
         <a href="{{ route('subscriptions.create') }}" class="btn-lime shrink-0">
-            <x-icon name="plus" class="w-4 h-4" /> Assign Membership
+            <x-icon name="plus" class="w-4 h-4" /> {{ __('Assign Membership') }}
         </a>
     </div>
 

@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Payments')
-@section('page-title', 'Payments')
+@section('title', __('Payments'))
+@section('page-title', __('Payments'))
 @section('breadcrumbs')
-    <a href="{{ route('dashboard') }}" class="hover:text-[#202520]">Dashboard</a>
+    <a href="{{ route('dashboard') }}" class="hover:text-[#202520]">{{ __('Dashboard') }}</a>
     <span>/</span>
-    <span class="text-[#202520] font-medium">Payments</span>
+    <span class="text-[#202520] font-medium">{{ __('Payments') }}</span>
 @endsection
 
 @section('content')
@@ -14,11 +14,11 @@
 <div class="space-y-6">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <h2 class="font-display font-bold text-2xl text-[#202520]">Payment Ledger</h2>
+            <h2 class="font-display font-bold text-2xl text-[#202520]">{{ __('Payment Ledger') }}</h2>
             <p class="text-sm text-[#858B84]">Record full or partial payments, track balances, process refunds, and download receipts.</p>
         </div>
         <a href="{{ route('payments.create') }}" class="btn-lime shrink-0">
-            <x-icon name="plus" class="w-4 h-4" /> Record Payment
+            <x-icon name="plus" class="w-4 h-4" /> {{ __('Record Payment') }}
         </a>
     </div>
 

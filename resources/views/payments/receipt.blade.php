@@ -4,7 +4,19 @@
     <meta charset="UTF-8">
     <title>Receipt {{ $payment->payment_reference ?? '#' . $payment->id }}</title>
     <style>
-        body { font-family: DejaVu Sans, sans-serif; color: #202520; font-size: 12px; margin: 0; padding: 28px; background: #ffffff; }
+        @font-face {
+            font-family: 'NotoSansKhmer';
+            font-style: normal;
+            font-weight: normal;
+            src: url("{{ storage_path('fonts/NotoSansKhmer-Regular.ttf') }}") format('truetype');
+        }
+        @font-face {
+            font-family: 'NotoSansKhmer';
+            font-style: normal;
+            font-weight: bold;
+            src: url("{{ storage_path('fonts/NotoSansKhmer-Bold.ttf') }}") format('truetype');
+        }
+        body { font-family: 'NotoSansKhmer', DejaVu Sans, sans-serif; color: #202520; font-size: 12px; margin: 0; padding: 28px; background: #ffffff; }
         .header { background: #171A18; color: #FFFFFF; padding: 22px 24px; border-radius: 10px; margin-bottom: 22px; }
         .header-top { display: table; width: 100%; }
         .header-left { display: table-cell; vertical-align: middle; }

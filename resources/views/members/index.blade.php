@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Members')
-@section('page-title', 'Members')
+@section('title', __('Members'))
+@section('page-title', __('Members'))
 @section('breadcrumbs')
-    <a href="{{ route('dashboard') }}" class="hover:text-[#202520]">Dashboard</a>
+    <a href="{{ route('dashboard') }}" class="hover:text-[#202520]">{{ __('Dashboard') }}</a>
     <span>/</span>
-    <span class="text-[#202520] font-medium">Members</span>
+    <span class="text-[#202520] font-medium">{{ __('Members') }}</span>
 @endsection
 
 @section('content')
@@ -13,12 +13,12 @@
     <!-- Header Row -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <h2 class="font-display font-bold text-2xl text-[#202520]">Member Directory</h2>
-            <p class="text-sm text-[#858B84]">Manage member profiles, status, and active plans.</p>
+            <h2 class="font-display font-bold text-2xl text-[#202520]">{{ __('Member Directory') }}</h2>
+            <p class="text-sm text-[#858B84]">{{ __('Manage member profiles, status, and active plans.') }}</p>
         </div>
         <a href="{{ route('members.create') }}" class="btn-lime shrink-0">
             <x-icon name="user-plus" class="w-4 h-4" />
-            <span>Add New Member</span>
+            <span>{{ __('Add New Member') }}</span>
         </a>
     </div>
 
@@ -81,13 +81,13 @@
                 <table class="w-full text-sm">
                     <thead class="bg-[#F5F5EF] border-b border-[#E8EAE3] text-xs uppercase tracking-wider text-[#858B84]">
                         <tr>
-                            <th class="text-left px-6 py-3.5 font-semibold">Member</th>
-                            <th class="text-left px-4 py-3.5 font-semibold">Member ID</th>
-                            <th class="text-left px-4 py-3.5 font-semibold">Contact</th>
-                            <th class="text-left px-4 py-3.5 font-semibold">Current Plan</th>
-                            <th class="text-left px-4 py-3.5 font-semibold">Joined</th>
-                            <th class="text-left px-4 py-3.5 font-semibold">Status</th>
-                            <th class="text-right px-6 py-3.5 font-semibold">Actions</th>
+                            <th class="text-left px-6 py-3.5 font-semibold">{{ __('Member') }}</th>
+                            <th class="text-left px-4 py-3.5 font-semibold">{{ __('Member ID') }}</th>
+                            <th class="text-left px-4 py-3.5 font-semibold">{{ __('Contact') }}</th>
+                            <th class="text-left px-4 py-3.5 font-semibold">{{ __('Current Plan') }}</th>
+                            <th class="text-left px-4 py-3.5 font-semibold">{{ __('Joined') }}</th>
+                            <th class="text-left px-4 py-3.5 font-semibold">{{ __('Status') }}</th>
+                            <th class="text-right px-6 py-3.5 font-semibold">{{ __('Actions') }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[#E8EAE3]">

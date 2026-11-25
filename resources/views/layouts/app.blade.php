@@ -7,10 +7,10 @@
 
     <title>@yield('title', 'Dashboard') — {{ $gymName ?? config('app.name', 'PulseCore Fitness') }}</title>
 
-    <!-- Google Fonts: Plus Jakarta Sans + Inter -->
+    <!-- Google Fonts: Plus Jakarta Sans + Inter + Noto Sans Khmer -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Khmer:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
@@ -30,7 +30,7 @@
                 </div>
                 <div class="sidebar-brand-text truncate">
                     <div class="font-display font-bold text-sm tracking-tight text-white truncate">{{ $gymName ?? 'PulseCore Fitness' }}</div>
-                    <div class="text-[11px] text-[#858B84] font-medium">Gym Operations OS</div>
+                    <div class="text-[11px] text-[#858B84] font-medium">{{ __('Gym Operations OS') }}</div>
                 </div>
             </a>
 
@@ -42,19 +42,19 @@
         <!-- Navigation Links -->
         <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
             <div class="sidebar-section-label px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[#858B84]">
-                Operations
+                {{ __('Operations') }}
             </div>
 
             @php
                 $navItems = [
-                    ['route' => 'dashboard', 'pattern' => 'dashboard', 'icon' => 'layout-dashboard', 'label' => 'Dashboard'],
-                    ['route' => 'members.index', 'pattern' => 'members.*', 'icon' => 'users', 'label' => 'Members'],
-                    ['route' => 'membership-plans.index', 'pattern' => 'membership-plans.*', 'icon' => 'layers', 'label' => 'Membership Plans'],
-                    ['route' => 'memberships.index', 'pattern' => ['memberships.*', 'subscriptions.*'], 'icon' => 'id-card', 'label' => 'Memberships'],
-                    ['route' => 'payments.index', 'pattern' => 'payments.*', 'icon' => 'wallet', 'label' => 'Payments'],
-                    ['route' => 'attendance.index', 'pattern' => 'attendance.*', 'icon' => 'calendar-check', 'label' => 'Attendance'],
-                    ['route' => 'reports.index', 'pattern' => 'reports.*', 'icon' => 'bar-chart-3', 'label' => 'Reports'],
-                    ['route' => 'settings.index', 'pattern' => 'settings.*', 'icon' => 'settings', 'label' => 'Settings'],
+                    ['route' => 'dashboard', 'pattern' => 'dashboard', 'icon' => 'layout-dashboard', 'label' => __('Dashboard')],
+                    ['route' => 'members.index', 'pattern' => 'members.*', 'icon' => 'users', 'label' => __('Members')],
+                    ['route' => 'membership-plans.index', 'pattern' => 'membership-plans.*', 'icon' => 'layers', 'label' => __('Membership Plans')],
+                    ['route' => 'memberships.index', 'pattern' => ['memberships.*', 'subscriptions.*'], 'icon' => 'id-card', 'label' => __('Memberships')],
+                    ['route' => 'payments.index', 'pattern' => 'payments.*', 'icon' => 'wallet', 'label' => __('Payments')],
+                    ['route' => 'attendance.index', 'pattern' => 'attendance.*', 'icon' => 'calendar-check', 'label' => __('Attendance')],
+                    ['route' => 'reports.index', 'pattern' => 'reports.*', 'icon' => 'bar-chart-3', 'label' => __('Reports')],
+                    ['route' => 'settings.index', 'pattern' => 'settings.*', 'icon' => 'settings', 'label' => __('Settings')],
                 ];
             @endphp
 
@@ -80,7 +80,7 @@
             <button id="sidebar-collapse-btn" type="button"
                     class="hidden lg:flex w-full items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-[#858B84] hover:text-white hover:bg-white/8 transition">
                 <x-icon name="chevron-left" class="w-4 h-4" />
-                <span class="sidebar-label">Collapse Sidebar</span>
+                <span class="sidebar-label">{{ __('Collapse Sidebar') }}</span>
             </button>
         </div>
     </aside>
@@ -107,11 +107,23 @@
             </div>
 
             <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Language Switcher (Khmer / English) -->
+                <div class="inline-flex items-center rounded-xl border border-[#E8EAE3] bg-[#F5F5EF] p-0.5 text-xs font-semibold">
+                    <a href="{{ route('locale.switch', 'km') }}"
+                       class="px-2.5 py-1 rounded-lg transition {{ app()->getLocale() === 'km' ? 'bg-[#171A18] text-[#C5F467]' : 'text-[#565C55] hover:text-[#202520]' }}">
+                        ខ្មែរ
+                    </a>
+                    <a href="{{ route('locale.switch', 'en') }}"
+                       class="px-2 py-1 rounded-lg transition {{ app()->getLocale() === 'en' ? 'bg-[#171A18] text-[#C5F467]' : 'text-[#565C55] hover:text-[#202520]' }}">
+                        EN
+                    </a>
+                </div>
+
                 <!-- Quick Global Member Search -->
                 <form action="{{ route('members.index') }}" method="GET" class="hidden md:flex items-center relative">
                     <x-icon name="search" class="w-4 h-4 text-[#858B84] absolute left-3 pointer-events-none" />
                     <input type="text" name="search" value="{{ request()->routeIs('members.index') ? request('search') : '' }}"
-                           placeholder="Search member ID or name..."
+                           placeholder="{{ __('Search member ID or name...') }}"
                            class="w-56 lg:w-64 pl-9 pr-3 py-1.5 text-sm bg-[#F5F5EF] border border-[#E8EAE3] rounded-xl text-[#202520] placeholder-[#858B84] focus:outline-none focus:bg-white focus:border-[#171A18] focus:ring-2 focus:ring-[#C5F467]/60 transition">
                 </form>
 
@@ -131,7 +143,7 @@
                     <div id="notifications-menu" data-dropdown-menu
                          class="hidden absolute right-0 mt-2 w-80 bg-white rounded-2xl border border-[#E8EAE3] shadow-xl overflow-hidden z-50">
                         <div class="px-4 py-3 border-b border-[#E8EAE3] flex items-center justify-between bg-[#F5F5EF]/60">
-                            <span class="font-display font-bold text-sm text-[#202520]">Alerts & Reminders</span>
+                            <span class="font-display font-bold text-sm text-[#202520]">{{ __('Alerts & Reminders') }}</span>
                             <span class="badge-pill badge-lime">{{ ($headerAlerts ?? collect())->count() }}</span>
                         </div>
                         <div class="max-h-80 overflow-y-auto divide-y divide-[#E8EAE3]">
@@ -145,7 +157,7 @@
                                 </a>
                             @empty
                                 <div class="px-4 py-8 text-center text-xs text-[#858B84]">
-                                    All caught up. No urgent membership or payment alerts.
+                                    {{ __('All caught up. No urgent membership or payment alerts.') }}
                                 </div>
                             @endforelse
                         </div>
@@ -174,16 +186,16 @@
                         </div>
                         <div class="p-1.5 space-y-0.5">
                             <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-[#202520] hover:bg-[#F5F5EF]">
-                                <x-icon name="layout-dashboard" class="w-4 h-4 text-[#858B84]" /> Dashboard
+                                <x-icon name="layout-dashboard" class="w-4 h-4 text-[#858B84]" /> {{ __('Dashboard') }}
                             </a>
                             <a href="{{ route('settings.index') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-[#202520] hover:bg-[#F5F5EF]">
-                                <x-icon name="settings" class="w-4 h-4 text-[#858B84]" /> Account & Settings
+                                <x-icon name="settings" class="w-4 h-4 text-[#858B84]" /> {{ __('Account & Settings') }}
                             </a>
                             <div class="my-1 border-t border-[#E8EAE3]"></div>
                             <form action="{{ route('logout') }}" method="POST" data-no-loading>
                                 @csrf
                                 <button type="submit" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-[#C0392B] hover:bg-[#E76B62]/10 cursor-pointer">
-                                    <x-icon name="log-out" class="w-4 h-4" /> Logout
+                                    <x-icon name="log-out" class="w-4 h-4" /> {{ __('Logout') }}
                                 </button>
                             </form>
                         </div>
@@ -244,13 +256,13 @@
                     <x-icon name="alert-triangle" class="w-5 h-5" />
                 </div>
                 <div>
-                    <h3 id="confirm-modal-title" class="font-display font-bold text-base text-[#202520]">Confirm Action</h3>
-                    <p id="confirm-modal-message" class="text-sm text-[#858B84] mt-1">Are you sure you want to continue?</p>
+                    <h3 id="confirm-modal-title" class="font-display font-bold text-base text-[#202520]">{{ __('Confirm Action') }}</h3>
+                    <p id="confirm-modal-message" class="text-sm text-[#858B84] mt-1">{{ __('Are you sure you want to continue?') }}</p>
                 </div>
             </div>
             <div class="flex items-center justify-end gap-2.5">
-                <button id="confirm-modal-cancel" type="button" class="btn-outline">Cancel</button>
-                <button id="confirm-modal-ok" type="button" class="btn-coral">Confirm</button>
+                <button id="confirm-modal-cancel" type="button" class="btn-outline">{{ __('Cancel') }}</button>
+                <button id="confirm-modal-ok" type="button" class="btn-coral">{{ __('Confirm') }}</button>
             </div>
         </div>
     </div>

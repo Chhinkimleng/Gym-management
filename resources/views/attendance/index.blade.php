@@ -1,22 +1,22 @@
 @extends('layouts.app')
 
-@section('title', 'Attendance')
-@section('page-title', 'Attendance Desk')
+@section('title', __('Attendance'))
+@section('page-title', __('Attendance'))
 @section('breadcrumbs')
-    <a href="{{ route('dashboard') }}" class="hover:text-[#202520]">Dashboard</a>
+    <a href="{{ route('dashboard') }}" class="hover:text-[#202520]">{{ __('Dashboard') }}</a>
     <span>/</span>
-    <span class="text-[#202520] font-medium">Attendance</span>
+    <span class="text-[#202520] font-medium">{{ __('Attendance') }}</span>
 @endsection
 
 @section('content')
 <div class="space-y-6">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <h2 class="font-display font-bold text-2xl text-[#202520]">Live Attendance Desk</h2>
+            <h2 class="font-display font-bold text-2xl text-[#202520]">{{ __('Live Attendance Desk') }}</h2>
             <p class="text-sm text-[#858B84]">Check members in and out, verify active membership eligibility, and monitor floor occupancy.</p>
         </div>
         <a href="{{ route('attendance.report') }}" class="btn-outline shrink-0">
-            <x-icon name="file-text" class="w-4 h-4" /> Full Attendance History
+            <x-icon name="file-text" class="w-4 h-4" /> {{ __('Full Attendance History') }}
         </a>
     </div>
 

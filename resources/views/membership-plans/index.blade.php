@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Membership Plans')
-@section('page-title', 'Membership Plans')
+@section('title', __('Membership Plans'))
+@section('page-title', __('Membership Plans'))
 @section('breadcrumbs')
-    <a href="{{ route('dashboard') }}" class="hover:text-[#202520]">Dashboard</a>
+    <a href="{{ route('dashboard') }}" class="hover:text-[#202520]">{{ __('Dashboard') }}</a>
     <span>/</span>
-    <span class="text-[#202520] font-medium">Membership Plans</span>
+    <span class="text-[#202520] font-medium">{{ __('Membership Plans') }}</span>
 @endsection
 
 @section('content')
@@ -14,12 +14,12 @@
 <div class="space-y-6">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <h2 class="font-display font-bold text-2xl text-[#202520]">Membership Plans</h2>
-            <p class="text-sm text-[#858B84]">Configure pricing, billing cycles, custom durations, and plan benefits.</p>
+            <h2 class="font-display font-bold text-2xl text-[#202520]">{{ __('Membership Plans') }}</h2>
+            <p class="text-sm text-[#858B84]">{{ __('Configure pricing, billing cycles, custom durations, and plan benefits.') }}</p>
         </div>
         @if(Auth::user()->isAdmin())
             <a href="{{ route('membership-plans.create') }}" class="btn-lime shrink-0">
-                <x-icon name="plus" class="w-4 h-4" /> Create Plan
+                <x-icon name="plus" class="w-4 h-4" /> {{ __('Create Plan') }}
             </a>
         @endif
     </div>

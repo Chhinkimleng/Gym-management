@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Reports & Analytics')
-@section('page-title', 'Reports & Analytics')
+@section('title', __('Reports'))
+@section('page-title', __('Reports'))
 @section('breadcrumbs')
-    <a href="{{ route('dashboard') }}" class="hover:text-[#202520]">Dashboard</a>
+    <a href="{{ route('dashboard') }}" class="hover:text-[#202520]">{{ __('Dashboard') }}</a>
     <span>/</span>
-    <span class="text-[#202520] font-medium">Reports</span>
+    <span class="text-[#202520] font-medium">{{ __('Reports') }}</span>
 @endsection
 
 @section('content')
@@ -15,18 +15,18 @@
     <!-- Header & Exports -->
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 no-print">
         <div>
-            <h2 class="font-display font-bold text-2xl text-[#202520]">Business Reports &amp; Exports</h2>
+            <h2 class="font-display font-bold text-2xl text-[#202520]">{{ __('Business Reports & Exports') }}</h2>
             <p class="text-sm text-[#858B84]">Real-time revenue, membership sales, attendance, and member activity.</p>
         </div>
         <div class="flex flex-wrap items-center gap-2.5">
             <a href="{{ route('reports.export.csv', request()->query()) }}" class="btn-outline">
-                <x-icon name="download" class="w-4 h-4" /> Export CSV
+                <x-icon name="download" class="w-4 h-4" /> {{ __('Export CSV') }}
             </a>
             <a href="{{ route('reports.export.pdf', request()->query()) }}" class="btn-lime">
-                <x-icon name="file-text" class="w-4 h-4" /> Export PDF
+                <x-icon name="file-text" class="w-4 h-4" /> {{ __('Export PDF') }}
             </a>
             <button type="button" onclick="window.print()" class="btn-dark">
-                <x-icon name="printer" class="w-4 h-4" /> Print
+                <x-icon name="printer" class="w-4 h-4" /> {{ __('Print') }}
             </button>
         </div>
     </div>

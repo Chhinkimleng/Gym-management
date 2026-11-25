@@ -17,6 +17,13 @@ Route::get('/', function () {
         : redirect()->route('login');
 });
 
+Route::get('/locale/{locale}', function (string $locale) {
+    if (in_array($locale, ['km', 'en'], true)) {
+        session(['locale' => $locale]);
+    }
+    return back();
+})->name('locale.switch');
+
 Auth::routes(['register' => false]);
 
 Route::middleware(['auth', 'active.user'])->group(function () {

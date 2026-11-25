@@ -1,17 +1,17 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard')
-@section('page-title', 'Dashboard')
+@section('title', __('Dashboard'))
+@section('page-title', __('Dashboard'))
 @section('breadcrumbs')
     <span>{{ $gymName ?? 'PulseCore Fitness' }}</span>
     <span>/</span>
-    <span class="text-[#202520] font-medium">Overview</span>
+    <span class="text-[#202520] font-medium">{{ __('Overview') }}</span>
 @endsection
 
 @section('content')
 @php
     $hour = now()->hour;
-    $greeting = $hour < 12 ? 'Good morning' : ($hour < 18 ? 'Good afternoon' : 'Good evening');
+    $greeting = $hour < 12 ? __('Good morning') : ($hour < 18 ? __('Good afternoon') : __('Good evening'));
     $firstName = explode(' ', Auth::user()->name)[0];
     $curr = $currencySymbol ?? '$';
 @endphp
@@ -29,22 +29,22 @@
                     {{ $greeting }}, {{ $firstName }}
                 </h2>
                 <p class="text-sm text-[#B7BDB5] mt-1.5 max-w-2xl">
-                    Every check-in builds momentum. Keep member retention high, follow up on expiring plans, and keep the floor energized today.
+                    {{ __('Every check-in builds momentum. Keep member retention high, follow up on expiring plans, and keep the floor energized today.') }}
                 </p>
             </div>
 
             <div class="flex flex-wrap items-center gap-2.5 shrink-0">
                 <a href="{{ route('members.create') }}" class="btn-lime">
                     <x-icon name="user-plus" class="w-4 h-4" />
-                    <span>Add Member</span>
+                    <span>{{ __('Add Member') }}</span>
                 </a>
                 <a href="{{ route('payments.create') }}" class="btn-coral">
                     <x-icon name="wallet" class="w-4 h-4" />
-                    <span>Record Payment</span>
+                    <span>{{ __('Record Payment') }}</span>
                 </a>
                 <a href="{{ route('attendance.index') }}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/16 text-white text-sm font-semibold border border-white/15 transition">
                     <x-icon name="calendar-check" class="w-4 h-4 text-[#C5F467]" />
-                    <span>Check-In Desk</span>
+                    <span>{{ __('Check-In Desk') }}</span>
                 </a>
             </div>
         </div>
@@ -56,7 +56,7 @@
         <div class="sm:col-span-2 xl:col-span-1 bg-[#171A18] text-white rounded-2xl p-5 border border-white/10 flex flex-col justify-between">
             <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-[#858B84]">Monthly Revenue</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-[#858B84]">{{ __('Monthly Revenue') }}</p>
                     <p class="font-display font-extrabold text-3xl text-white mt-2 tabular-nums">
                         {{ $curr }}{{ number_format($monthlyRevenue, 2) }}
                     </p>
@@ -66,13 +66,13 @@
                 </div>
             </div>
             <div class="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs">
-                <span class="text-[#A9AFA7]">Today: <strong class="text-white tabular-nums">{{ $curr }}{{ number_format($todayRevenue, 2) }}</strong></span>
+                <span class="text-[#A9AFA7]">{{ __('Today:') }} <strong class="text-white tabular-nums">{{ $curr }}{{ number_format($todayRevenue, 2) }}</strong></span>
                 @if($revenueGrowthPct !== null)
                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold {{ $revenueGrowthPct >= 0 ? 'bg-[#C5F467]/20 text-[#C5F467]' : 'bg-[#FF795B]/20 text-[#FF795B]' }}">
-                        {{ $revenueGrowthPct >= 0 ? '+' : '' }}{{ $revenueGrowthPct }}% vs last mo
+                        {{ $revenueGrowthPct >= 0 ? '+' : '' }}{{ $revenueGrowthPct }}%
                     </span>
                 @else
-                    <span class="text-[#858B84]">Current month</span>
+                    <span class="text-[#858B84]">{{ __('Current month') }}</span>
                 @endif
             </div>
         </div>
@@ -81,7 +81,7 @@
         <div class="gym-card gym-card-hover p-5 flex flex-col justify-between">
             <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-[#858B84]">Total Members</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-[#858B84]">{{ __('Total Members') }}</p>
                     <p class="font-display font-extrabold text-3xl text-[#202520] mt-2 tabular-nums">{{ number_format($totalMembers) }}</p>
                 </div>
                 <div class="w-10 h-10 rounded-xl bg-[#C5F467]/35 text-[#202520] flex items-center justify-center shrink-0">
@@ -89,8 +89,8 @@
                 </div>
             </div>
             <div class="mt-4 pt-3 border-t border-[#E8EAE3] flex items-center justify-between text-xs text-[#858B84]">
-                <span>Active rate: <strong class="text-[#202520]">{{ $totalMembers > 0 ? round(($activeMembers / $totalMembers) * 100) : 0 }}%</strong></span>
-                <span>Inactive: <strong class="text-[#202520]">{{ $inactiveMembers }}</strong></span>
+                <span>{{ __('Active rate:') }} <strong class="text-[#202520]">{{ $totalMembers > 0 ? round(($activeMembers / $totalMembers) * 100) : 0 }}%</strong></span>
+                <span>{{ __('Inactive:') }} <strong class="text-[#202520]">{{ $inactiveMembers }}</strong></span>
             </div>
         </div>
 
@@ -98,7 +98,7 @@
         <div class="gym-card gym-card-hover p-5 flex flex-col justify-between">
             <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-[#858B84]">Active Members</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-[#858B84]">{{ __('Active Members') }}</p>
                     <p class="font-display font-extrabold text-3xl text-[#202520] mt-2 tabular-nums">{{ number_format($activeMembers) }}</p>
                 </div>
                 <div class="w-10 h-10 rounded-xl bg-[#4CAF78]/15 text-[#267A4B] flex items-center justify-center shrink-0">
@@ -106,8 +106,8 @@
                 </div>
             </div>
             <div class="mt-4 pt-3 border-t border-[#E8EAE3] flex items-center justify-between text-xs text-[#858B84]">
-                <span>Active plans: <strong class="text-[#267A4B]">{{ $activeSubscriptions }}</strong></span>
-                <span>Expiring ({{ $noticeDays }}d): <strong class="text-[#9A6708]">{{ $expiringSoon }}</strong></span>
+                <span>{{ __('Active plans:') }} <strong class="text-[#267A4B]">{{ $activeSubscriptions }}</strong></span>
+                <span>({{ $noticeDays }}d): <strong class="text-[#9A6708]">{{ $expiringSoon }}</strong></span>
             </div>
         </div>
 
@@ -115,7 +115,7 @@
         <div class="gym-card gym-card-hover p-5 flex flex-col justify-between">
             <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-[#858B84]">Today's Attendance</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-[#858B84]">{{ __("Today's Attendance") }}</p>
                     <p class="font-display font-extrabold text-3xl text-[#202520] mt-2 tabular-nums">{{ number_format($todayAttendance) }}</p>
                 </div>
                 <div class="w-10 h-10 rounded-xl bg-[#FF795B]/15 text-[#C9472B] flex items-center justify-center shrink-0">
@@ -123,8 +123,8 @@
                 </div>
             </div>
             <div class="mt-4 pt-3 border-t border-[#E8EAE3] flex items-center justify-between text-xs text-[#858B84]">
-                <span>In gym now: <strong class="text-[#267A4B]">{{ $currentlyCheckedIn }}</strong></span>
-                <span>Yesterday: <strong class="text-[#202520]">{{ $yesterdayAttendance }}</strong></span>
+                <span>{{ __('In gym now:') }} <strong class="text-[#267A4B]">{{ $currentlyCheckedIn }}</strong></span>
+                <span>{{ __('Yesterday:') }} <strong class="text-[#202520]">{{ $yesterdayAttendance }}</strong></span>
             </div>
         </div>
 
@@ -132,7 +132,7 @@
         <div class="gym-card gym-card-hover p-5 flex flex-col justify-between">
             <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-[#858B84]">New Members (Month)</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-[#858B84]">{{ __('New Members (Month)') }}</p>
                     <p class="font-display font-extrabold text-2xl text-[#202520] mt-1.5 tabular-nums">{{ number_format($newMembersThisMonth) }}</p>
                 </div>
                 <div class="w-9 h-9 rounded-xl bg-[#F5F5EF] border border-[#E8EAE3] text-[#202520] flex items-center justify-center">
@@ -140,7 +140,7 @@
                 </div>
             </div>
             <p class="text-xs text-[#858B84] mt-3">
-                Last month: <strong class="text-[#202520]">{{ $newMembersLastMonth }}</strong> joined
+                <strong class="text-[#202520]">{{ $newMembersLastMonth }}</strong>
             </p>
         </div>
 
@@ -148,7 +148,7 @@
         <div class="gym-card gym-card-hover p-5 flex flex-col justify-between">
             <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-[#858B84]">Expired Memberships</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-[#858B84]">{{ __('Expired Memberships') }}</p>
                     <p class="font-display font-extrabold text-2xl text-[#202520] mt-1.5 tabular-nums">{{ number_format($expiredMemberships) }}</p>
                 </div>
                 <div class="w-9 h-9 rounded-xl bg-[#F2B84B]/18 text-[#9A6708] flex items-center justify-center">
@@ -156,8 +156,8 @@
                 </div>
             </div>
             <div class="mt-3 flex items-center justify-between text-xs">
-                <span class="text-[#858B84]">Renewal candidates</span>
-                <a href="{{ route('memberships.index', ['status' => 'expired']) }}" class="font-semibold text-[#202520] hover:underline">Review &rarr;</a>
+                <span class="text-[#858B84]">{{ __('Renewal candidates') }}</span>
+                <a href="{{ route('memberships.index', ['status' => 'expired']) }}" class="font-semibold text-[#202520] hover:underline">{{ __('Review') }} &rarr;</a>
             </div>
         </div>
 
@@ -168,17 +168,17 @@
                     <x-icon name="alert-circle" class="w-5 h-5" />
                 </div>
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-[#858B84]">Pending Payments &amp; Balances</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-[#858B84]">{{ __('Pending Payments & Balances') }}</p>
                     <div class="flex items-baseline gap-3 mt-1">
                         <span class="font-display font-extrabold text-2xl text-[#202520] tabular-nums">{{ $curr }}{{ number_format($pendingPaymentsAmount, 2) }}</span>
                         <span class="badge-pill {{ $pendingPaymentsCount > 0 ? 'badge-warning' : 'badge-success' }}">
-                            {{ $pendingPaymentsCount }} open {{ $pendingPaymentsCount === 1 ? 'record' : 'records' }}
+                            {{ $pendingPaymentsCount }}
                         </span>
                     </div>
                 </div>
             </div>
             <a href="{{ route('payments.index', ['status' => 'partially_paid']) }}" class="btn-outline shrink-0">
-                View Open Balances
+                {{ __('View Open Balances') }}
             </a>
         </div>
     </section>
@@ -189,11 +189,11 @@
         <div class="lg:col-span-8 gym-card p-6">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
                 <div>
-                    <h3 class="font-display font-bold text-base text-[#202520]">Monthly Revenue Trend</h3>
-                    <p class="text-xs text-[#858B84]">Net collected payments over the last 6 months</p>
+                    <h3 class="font-display font-bold text-base text-[#202520]">{{ __('Monthly Revenue Trend') }}</h3>
+                    <p class="text-xs text-[#858B84]">{{ __('Net collected payments over the last 6 months') }}</p>
                 </div>
                 <a href="{{ route('reports.index') }}" class="text-xs font-semibold text-[#202520] hover:text-[#FF795B] inline-flex items-center gap-1">
-                    Full Reports <x-icon name="arrow-up-right" class="w-3.5 h-3.5" />
+                    {{ __('Full Reports') }} <x-icon name="arrow-up-right" class="w-3.5 h-3.5" />
                 </a>
             </div>
             <div class="h-64">
@@ -204,8 +204,8 @@
         <!-- Membership Distribution -->
         <div class="lg:col-span-4 gym-card p-6">
             <div class="mb-4">
-                <h3 class="font-display font-bold text-base text-[#202520]">Membership Distribution</h3>
-                <p class="text-xs text-[#858B84]">Active subscribers across plans</p>
+                <h3 class="font-display font-bold text-base text-[#202520]">{{ __('Membership Distribution') }}</h3>
+                <p class="text-xs text-[#858B84]">{{ __('Active subscribers across plans') }}</p>
             </div>
             @if(array_sum($distributionCounts) > 0)
                 <div class="h-64 flex items-center justify-center">
@@ -214,7 +214,7 @@
             @else
                 <div class="h-64 flex flex-col items-center justify-center text-center text-xs text-[#858B84]">
                     <x-icon name="layers" class="w-8 h-8 mb-2 text-[#C6CBC4]" />
-                    <p>No active plan subscriptions yet.</p>
+                    <p>{{ __('No active plan subscriptions yet.') }}</p>
                 </div>
             @endif
         </div>
@@ -223,10 +223,10 @@
         <div class="lg:col-span-6 gym-card p-6">
             <div class="flex items-center justify-between mb-4">
                 <div>
-                    <h3 class="font-display font-bold text-base text-[#202520]">Weekly Attendance</h3>
-                    <p class="text-xs text-[#858B84]">Daily member check-ins (last 7 days)</p>
+                    <h3 class="font-display font-bold text-base text-[#202520]">{{ __('Weekly Attendance') }}</h3>
+                    <p class="text-xs text-[#858B84]">{{ __('Daily member check-ins (last 7 days)') }}</p>
                 </div>
-                <a href="{{ route('attendance.report') }}" class="text-xs font-semibold text-[#202520] hover:text-[#FF795B]">Logs &rarr;</a>
+                <a href="{{ route('attendance.report') }}" class="text-xs font-semibold text-[#202520] hover:text-[#FF795B]">{{ __('Full Attendance History') }} &rarr;</a>
             </div>
             <div class="h-56">
                 <canvas id="weeklyAttendanceChart"></canvas>
@@ -237,10 +237,10 @@
         <div class="lg:col-span-6 gym-card p-6">
             <div class="flex items-center justify-between mb-4">
                 <div>
-                    <h3 class="font-display font-bold text-base text-[#202520]">Member Registration Trends</h3>
-                    <p class="text-xs text-[#858B84]">Monthly new sign-ups &amp; cumulative base</p>
+                    <h3 class="font-display font-bold text-base text-[#202520]">{{ __('Member Registration Trends') }}</h3>
+                    <p class="text-xs text-[#858B84]">{{ __('Monthly new sign-ups & cumulative base') }}</p>
                 </div>
-                <a href="{{ route('members.index') }}" class="text-xs font-semibold text-[#202520] hover:text-[#FF795B]">Directory &rarr;</a>
+                <a href="{{ route('members.index') }}" class="text-xs font-semibold text-[#202520] hover:text-[#FF795B]">{{ __('All Members') }} &rarr;</a>
             </div>
             <div class="h-56">
                 <canvas id="memberTrendChart"></canvas>
@@ -255,9 +255,9 @@
             <div class="px-6 py-4 border-b border-[#E8EAE3] flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
                     <span class="w-2.5 h-2.5 rounded-full bg-[#F2B84B]"></span>
-                    <h3 class="font-display font-bold text-base text-[#202520]">Upcoming Membership Expirations</h3>
+                    <h3 class="font-display font-bold text-base text-[#202520]">{{ __('Upcoming Membership Expirations') }}</h3>
                 </div>
-                <a href="{{ route('memberships.index', ['status' => 'expiring']) }}" class="text-xs font-semibold text-[#858B84] hover:text-[#202520]">View all</a>
+                <a href="{{ route('memberships.index', ['status' => 'expiring']) }}" class="text-xs font-semibold text-[#858B84] hover:text-[#202520]">{{ __('View all') }}</a>
             </div>
             @if($expiringMembers->count() > 0)
                 <div class="divide-y divide-[#E8EAE3]">
@@ -268,15 +268,15 @@
                                     {{ $sub->member?->name }}
                                 </a>
                                 <p class="text-xs text-[#858B84] truncate">
-                                    {{ $sub->effectivePlanName() }} &bull; Ends {{ $sub->end_date->format('M d, Y') }}
+                                    {{ $sub->effectivePlanName() }} &bull; {{ $sub->end_date->format('M d, Y') }}
                                 </p>
                             </div>
                             <div class="flex items-center gap-2.5 shrink-0">
-                                <span class="badge-pill badge-warning">{{ $sub->daysRemaining() }}d left</span>
+                                <span class="badge-pill badge-warning">{{ $sub->daysRemaining() }}d</span>
                                 <form action="{{ route('subscriptions.renew', $sub) }}" method="POST" data-no-loading>
                                     @csrf
                                     <button type="submit" class="px-3 py-1.5 rounded-lg bg-[#C5F467] hover:bg-[#B7EA52] text-[#171A18] text-xs font-semibold cursor-pointer">
-                                        Renew
+                                        {{ __('Renew') }}
                                     </button>
                                 </form>
                             </div>
@@ -285,7 +285,7 @@
                 </div>
             @else
                 <div class="px-6 py-10 text-center text-sm text-[#858B84]">
-                    No memberships expiring in the next {{ $noticeDays }} days.
+                    {{ __('No active plan subscriptions yet.') }}
                 </div>
             @endif
         </div>
@@ -295,9 +295,9 @@
             <div class="px-6 py-4 border-b border-[#E8EAE3] flex items-center justify-between">
                 <div class="flex items-center gap-2.5">
                     <span class="w-2.5 h-2.5 rounded-full bg-[#4CAF78]"></span>
-                    <h3 class="font-display font-bold text-base text-[#202520]">Recent Attendance Records</h3>
+                    <h3 class="font-display font-bold text-base text-[#202520]">{{ __('Recent Attendance Records') }}</h3>
                 </div>
-                <a href="{{ route('attendance.index') }}" class="text-xs font-semibold text-[#858B84] hover:text-[#202520]">Check-In Desk</a>
+                <a href="{{ route('attendance.index') }}" class="text-xs font-semibold text-[#858B84] hover:text-[#202520]">{{ __('Check-In Desk') }}</a>
             </div>
             @if($todayAttendanceList->count() > 0)
                 <div class="divide-y divide-[#E8EAE3]">
@@ -311,18 +311,18 @@
                                     <a href="{{ route('members.show', $att->member) }}" class="text-sm font-semibold text-[#202520] hover:underline truncate block">
                                         {{ $att->member?->name }}
                                     </a>
-                                    <p class="text-xs text-[#858B84]">In: {{ $att->check_in->format('M d, h:i A') }}</p>
+                                    <p class="text-xs text-[#858B84]">{{ $att->check_in->format('M d, h:i A') }}</p>
                                 </div>
                             </div>
                             <span class="badge-pill {{ $att->check_out ? 'badge-neutral' : 'badge-lime' }}">
-                                {{ $att->check_out ? $att->durationFormatted() : 'In Gym' }}
+                                {{ $att->check_out ? $att->durationFormatted() : __('In Gym') }}
                             </span>
                         </div>
                     @endforeach
                 </div>
             @else
                 <div class="px-6 py-10 text-center text-sm text-[#858B84]">
-                    No attendance check-ins recorded yet.
+                    {{ __('No attendance check-ins recorded yet.') }}
                 </div>
             @endif
         </div>
@@ -330,18 +330,18 @@
         <!-- Recently Registered Members -->
         <div class="gym-card overflow-hidden">
             <div class="px-6 py-4 border-b border-[#E8EAE3] flex items-center justify-between">
-                <h3 class="font-display font-bold text-base text-[#202520]">Recently Registered Members</h3>
-                <a href="{{ route('members.index') }}" class="text-xs font-semibold text-[#858B84] hover:text-[#202520]">View all</a>
+                <h3 class="font-display font-bold text-base text-[#202520]">{{ __('Recently Registered Members') }}</h3>
+                <a href="{{ route('members.index') }}" class="text-xs font-semibold text-[#858B84] hover:text-[#202520]">{{ __('View all') }}</a>
             </div>
             @if($recentMembers->count() > 0)
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead class="bg-[#F5F5EF]/70 text-xs uppercase text-[#858B84]">
                             <tr>
-                                <th class="text-left px-6 py-2.5 font-semibold">Member</th>
-                                <th class="text-left px-4 py-2.5 font-semibold">Plan</th>
-                                <th class="text-left px-4 py-2.5 font-semibold">Joined</th>
-                                <th class="text-right px-6 py-2.5 font-semibold">Status</th>
+                                <th class="text-left px-6 py-2.5 font-semibold">{{ __('Member') }}</th>
+                                <th class="text-left px-4 py-2.5 font-semibold">{{ __('Current Plan') }}</th>
+                                <th class="text-left px-4 py-2.5 font-semibold">{{ __('Joined') }}</th>
+                                <th class="text-right px-6 py-2.5 font-semibold">{{ __('Status') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-[#E8EAE3]">
@@ -352,12 +352,12 @@
                                         <div class="text-xs text-[#858B84]">{{ $member->membership_id }}</div>
                                     </td>
                                     <td class="px-4 py-3 text-xs text-[#565C55]">
-                                        {{ $member->activeSubscription?->effectivePlanName() ?? 'No active plan' }}
+                                        {{ $member->activeSubscription?->effectivePlanName() ?? __('No Active Plan') }}
                                     </td>
                                     <td class="px-4 py-3 text-xs text-[#858B84]">{{ $member->joining_date->format('M d, Y') }}</td>
                                     <td class="px-6 py-3 text-right">
                                         <span class="badge-pill {{ $member->status === 'active' ? 'badge-success' : ($member->status === 'inactive' ? 'badge-neutral' : 'badge-danger') }}">
-                                            {{ ucfirst($member->status) }}
+                                            {{ __(ucfirst($member->status)) }}
                                         </span>
                                     </td>
                                 </tr>
@@ -366,25 +366,25 @@
                     </table>
                 </div>
             @else
-                <div class="px-6 py-10 text-center text-sm text-[#858B84]">No members registered yet.</div>
+                <div class="px-6 py-10 text-center text-sm text-[#858B84]">{{ __('No members registered yet.') }}</div>
             @endif
         </div>
 
         <!-- Recent Payments -->
         <div class="gym-card overflow-hidden">
             <div class="px-6 py-4 border-b border-[#E8EAE3] flex items-center justify-between">
-                <h3 class="font-display font-bold text-base text-[#202520]">Recent Payments</h3>
-                <a href="{{ route('payments.index') }}" class="text-xs font-semibold text-[#858B84] hover:text-[#202520]">View all</a>
+                <h3 class="font-display font-bold text-base text-[#202520]">{{ __('Recent Payments') }}</h3>
+                <a href="{{ route('payments.index') }}" class="text-xs font-semibold text-[#858B84] hover:text-[#202520]">{{ __('View all') }}</a>
             </div>
             @if($recentPayments->count() > 0)
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead class="bg-[#F5F5EF]/70 text-xs uppercase text-[#858B84]">
                             <tr>
-                                <th class="text-left px-6 py-2.5 font-semibold">Member</th>
-                                <th class="text-left px-4 py-2.5 font-semibold">Paid</th>
+                                <th class="text-left px-6 py-2.5 font-semibold">{{ __('Member') }}</th>
+                                <th class="text-left px-4 py-2.5 font-semibold">{{ __('Paid') }}</th>
                                 <th class="text-left px-4 py-2.5 font-semibold">Method</th>
-                                <th class="text-right px-6 py-2.5 font-semibold">Status</th>
+                                <th class="text-right px-6 py-2.5 font-semibold">{{ __('Status') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-[#E8EAE3]">
@@ -409,7 +409,7 @@
                                                 default => 'badge-danger',
                                             };
                                         @endphp
-                                        <span class="badge-pill {{ $pBadge }}">{{ ucfirst(str_replace('_', ' ', $payment->status)) }}</span>
+                                        <span class="badge-pill {{ $pBadge }}">{{ __(ucwords(str_replace('_', ' ', $payment->status))) }}</span>
                                     </td>
                                 </tr>
                             @endforeach
@@ -417,7 +417,7 @@
                     </table>
                 </div>
             @else
-                <div class="px-6 py-10 text-center text-sm text-[#858B84]">No payments recorded yet.</div>
+                <div class="px-6 py-10 text-center text-sm text-[#858B84]">{{ __('No payments recorded yet.') }}</div>
             @endif
         </div>
     </section>

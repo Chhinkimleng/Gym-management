@@ -1,24 +1,24 @@
 @extends('layouts.app')
 
-@section('title', 'Settings')
-@section('page-title', 'Settings')
+@section('title', __('Settings'))
+@section('page-title', __('Settings'))
 @section('breadcrumbs')
-    <a href="{{ route('dashboard') }}" class="hover:text-[#202520]">Dashboard</a>
+    <a href="{{ route('dashboard') }}" class="hover:text-[#202520]">{{ __('Dashboard') }}</a>
     <span>/</span>
-    <span class="text-[#202520] font-medium">Settings</span>
+    <span class="text-[#202520] font-medium">{{ __('Settings') }}</span>
 @endsection
 
 @section('content')
 <div class="space-y-6">
     <div>
-        <h2 class="font-display font-bold text-2xl text-[#202520]">System Settings &amp; Administration</h2>
+        <h2 class="font-display font-bold text-2xl text-[#202520]">{{ __('System Settings & Administration') }}</h2>
         <p class="text-sm text-[#858B84]">Manage your account, gym configuration, staff permissions, and database backups.</p>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <!-- Personal Profile & Password -->
         <div class="lg:col-span-5 gym-card p-6 space-y-4">
-            <h3 class="font-display font-bold text-base text-[#202520]">My Account</h3>
+            <h3 class="font-display font-bold text-base text-[#202520]">{{ __('My Account') }}</h3>
             <form action="{{ route('settings.profile.update') }}" method="POST" class="space-y-4">
                 @csrf
                 @method('PUT')

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Sign In')
+@section('title', __('Sign In'))
 
 @section('content')
 <div class="min-h-screen bg-[#F5F5EF] flex items-center justify-center p-4 sm:p-6 lg:p-10">
@@ -36,8 +36,8 @@
         <!-- Login Form Panel -->
         <div class="lg:col-span-7 p-8 sm:p-12 flex flex-col justify-center">
             <div class="max-w-md w-full mx-auto">
-                <h2 class="font-display font-bold text-2xl text-[#202520]">Welcome back</h2>
-                <p class="text-sm text-[#858B84] mt-1">Sign in to manage members, memberships, payments, and attendance.</p>
+                <h2 class="font-display font-bold text-2xl text-[#202520]">{{ __('Welcome back') }}</h2>
+                <p class="text-sm text-[#858B84] mt-1">{{ __('Sign in to manage members, memberships, payments, and attendance.') }}</p>
 
                 @if($errors->any())
                     <div class="mt-5 px-4 py-3 rounded-xl bg-[#E76B62]/12 border border-[#E76B62]/30 text-xs text-[#B83A31] font-medium">
@@ -49,17 +49,17 @@
                     @csrf
 
                     <div>
-                        <label for="email" class="gym-label">Email Address</label>
+                        <label for="email" class="gym-label">{{ __('Email Address') }}</label>
                         <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="email"
                                placeholder="admin@example.com" class="gym-input">
                     </div>
 
                     <div>
                         <div class="flex items-center justify-between mb-1.5">
-                            <label for="password" class="gym-label mb-0">Password</label>
+                            <label for="password" class="gym-label mb-0">{{ __('Password') }}</label>
                             @if (Route::has('password.request'))
                                 <a href="{{ route('password.request') }}" class="text-xs font-semibold text-[#202520] hover:text-[#FF795B]">
-                                    Forgot password?
+                                    {{ __('Forgot password?') }}
                                 </a>
                             @endif
                         </div>
@@ -70,18 +70,18 @@
                     <label class="flex items-center gap-2.5 text-sm text-[#565C55] cursor-pointer">
                         <input type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}
                                class="w-4 h-4 rounded border-[#E8EAE3] text-[#171A18] focus:ring-[#C5F467]">
-                        <span>Keep me signed in</span>
+                        <span>{{ __('Keep me signed in') }}</span>
                     </label>
 
                     <button type="submit" class="btn-lime w-full py-3 text-sm mt-2">
                         <x-icon name="log-in" class="w-4 h-4" />
-                        <span class="btn-label">Sign In to Dashboard</span>
+                        <span class="btn-label">{{ __('Sign In to Dashboard') }}</span>
                     </button>
                 </form>
 
                 <div class="mt-6 p-4 rounded-2xl bg-[#F5F5EF] border border-[#E8EAE3] text-xs text-[#565C55]">
-                    <div class="font-semibold text-[#202520] mb-1">Staff Access Policy</div>
-                    Staff accounts are provisioned by your gym administrator under Settings.
+                    <div class="font-semibold text-[#202520] mb-1">{{ __('Staff Access Policy') }}</div>
+                    {{ __('Staff accounts are provisioned by your gym administrator under Settings.') }}
                 </div>
             </div>
         </div>

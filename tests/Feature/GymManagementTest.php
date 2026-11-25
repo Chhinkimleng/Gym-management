@@ -328,4 +328,30 @@ class GymManagementTest extends TestCase
         $this->actingAs($this->admin)->get('/reports/export/pdf')->assertStatus(200);
         $this->actingAs($this->admin)->get('/settings')->assertStatus(200);
     }
+
+    public function test_khmer_locale_is_default_and_language_switcher_works(): void
+    {
+        $this->actingAs($this->admin)
+            ->get('/dashboard')
+            ->assertStatus(200)
+            ->assertSee('ផ្ទាំងគ្រប់គ្រង');
+
+        $this->actingAs($this->admin)
+            ->get('/locale/en')
+            ->assertRedirect();
+
+        $this->actingAs($this->admin)
+            ->get('/dashboard')
+            ->assertStatus(200)
+            ->assertSee('Monthly Revenue Trend');
+
+        $this->actingAs($this->admin)
+            ->get('/locale/km')
+            ->assertRedirect();
+
+        $this->actingAs($this->admin)
+            ->get('/dashboard')
+            ->assertStatus(200)
+            ->assertSee('ចំណូលប្រចាំខែ');
+    }
 }
