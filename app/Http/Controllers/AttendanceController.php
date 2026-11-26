@@ -21,12 +21,17 @@ class AttendanceController extends Controller
 
         $search = trim((string) $request->input('search'));
 
-        $checkedInNow = Attendance::with(['member.activeSubscription.membershipPlan', 'recorder'])
+        $checkedInNow = Attendance::with('member:id,name,membership_id')
+            ->select(['id', 'member_id', 'check_in'])
             ->whereNull('check_out')
             ->latest('check_in')
             ->get();
 
-        $membersQuery = Member::with(['activeSubscription.membershipPlan', 'activeAttendance'])
+        $membersQuery = Member::with([
+            'activeSubscription:id,member_id,membership_plan_id,plan_name,end_date',
+            'activeAttendance:id,member_id,check_in',
+        ])
+            ->select(['id', 'name', 'membership_id', 'status'])
             ->orderBy('name');
 
         if ($search !== '') {
@@ -39,19 +44,18 @@ class AttendanceController extends Controller
 
         $members = $membersQuery->paginate(12)->withQueryString();
 
-        $todayRecords = Attendance::with(['member', 'recorder'])
-            ->whereDate('check_in', today())
-            ->latest('check_in')
-            ->take(20)
-            ->get();
+        $todayAgg = Attendance::selectRaw("
+            COUNT(*) as total_checkins,
+            SUM(CASE WHEN check_out IS NOT NULL THEN 1 ELSE 0 END) as checked_out
+        ")->whereBetween('check_in', [today()->startOfDay(), today()->endOfDay()])->first();
 
         $todayStats = [
-            'total_checkins' => Attendance::whereDate('check_in', today())->count(),
+            'total_checkins' => (int) ($todayAgg->total_checkins ?? 0),
             'currently_in' => $checkedInNow->count(),
-            'checked_out' => Attendance::whereDate('check_in', today())->whereNotNull('check_out')->count(),
+            'checked_out' => (int) ($todayAgg->checked_out ?? 0),
         ];
 
-        return view('attendance.index', compact('members', 'checkedInNow', 'todayRecords', 'todayStats', 'search'));
+        return view('attendance.index', compact('members', 'checkedInNow', 'todayStats', 'search'));
     }
 
     public function checkIn(Request $request)

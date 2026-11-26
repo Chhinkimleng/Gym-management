@@ -108,4 +108,15 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => el.remove(), 300);
         }, 6000);
     });
+
+    // 7. Debounced search auto-submit (350ms)
+    document.querySelectorAll('input[data-debounce-search]').forEach((input) => {
+        let timer;
+        input.addEventListener('input', () => {
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                input.closest('form')?.submit();
+            }, 350);
+        });
+    });
 });

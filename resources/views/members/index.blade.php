@@ -50,7 +50,7 @@
             @endif
             <div class="md:col-span-6 relative">
                 <x-icon name="search" class="w-4 h-4 text-[#858B84] absolute left-3.5 top-3 pointer-events-none" />
-                <input type="text" name="search" value="{{ request('search') }}"
+                <input type="text" name="search" value="{{ request('search') }}" data-debounce-search
                        placeholder="Search by Member ID, name, email, or phone..."
                        class="gym-input pl-10">
             </div>
@@ -97,6 +97,7 @@
                                     <div class="flex items-center gap-3">
                                         @if($member->photo)
                                             <img src="{{ \App\Support\MediaHelper::url($member->photo) }}" alt="{{ $member->name }}"
+                                                 loading="lazy" decoding="async"
                                                  class="w-10 h-10 rounded-full object-cover border border-[#E8EAE3] shrink-0">
                                         @else
                                             <div class="w-10 h-10 rounded-full bg-[#171A18] text-[#C5F467] font-display font-bold text-xs flex items-center justify-center shrink-0">

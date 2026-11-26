@@ -93,6 +93,12 @@ class Member extends Model
 
     public function outstandingBalance(): float
     {
+        if ($this->relationLoaded('payments')) {
+            return (float) $this->payments
+                ->whereIn('status', [Payment::STATUS_PENDING, Payment::STATUS_PARTIALLY_PAID])
+                ->sum('remaining_balance');
+        }
+
         return (float) $this->payments()
             ->whereIn('status', [Payment::STATUS_PENDING, Payment::STATUS_PARTIALLY_PAID])
             ->sum('remaining_balance');

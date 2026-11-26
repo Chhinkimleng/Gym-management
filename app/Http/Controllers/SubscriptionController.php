@@ -23,7 +23,10 @@ class SubscriptionController extends Controller
         Subscription::syncExpiredStatuses();
 
         $noticeDays = max(1, (int) Setting::getValue('expiring_notice_days', 7));
-        $query = Subscription::with(['member', 'membershipPlan', 'payments']);
+        $query = Subscription::with([
+            'member:id,name,membership_id',
+            'payments:id,subscription_id,amount_paid,refunded_amount,status',
+        ]);
 
         if ($search = trim((string) $request->input('search'))) {
             $query->where(function ($q) use ($search) {
@@ -72,7 +75,7 @@ class SubscriptionController extends Controller
     public function create(?Member $member = null)
     {
         $plans = MembershipPlan::where('is_active', true)->orderBy('price')->get();
-        $members = $member ? collect([$member]) : Member::orderBy('name')->get();
+        $members = $member ? collect([$member]) : Member::select(['id', 'name', 'membership_id', 'status'])->orderBy('name')->get();
 
         return view('subscriptions.create', compact('member', 'members', 'plans'));
     }

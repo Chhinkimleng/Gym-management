@@ -18,16 +18,29 @@ class ReportService
         $fromDate = $from->copy()->startOfDay();
         $toDate = $to->copy()->endOfDay();
 
-        $paymentsQuery = Payment::with(['member', 'subscription.membershipPlan', 'recorder'])
+        $paymentsQuery = Payment::with([
+            'member:id,name,membership_id',
+            'subscription:id,membership_plan_id,plan_name,plan_price',
+            'recorder:id,name',
+        ])
+            ->select(['id', 'payment_reference', 'member_id', 'subscription_id', 'total_amount', 'amount_paid', 'remaining_balance', 'refunded_amount', 'payment_method', 'status', 'payment_date', 'recorded_by'])
             ->whereBetween('payment_date', [$fromDate, $toDate]);
 
-        $subscriptionsQuery = Subscription::with(['member', 'membershipPlan'])
+        $subscriptionsQuery = Subscription::with([
+            'member:id,name,membership_id',
+        ])
+            ->select(['id', 'member_id', 'membership_plan_id', 'plan_name', 'plan_price', 'start_date', 'end_date', 'status'])
             ->whereBetween('start_date', [$fromDate->toDateString(), $toDate->toDateString()]);
 
-        $membersQuery = Member::with('activeSubscription.membershipPlan')
+        $membersQuery = Member::with('activeSubscription:id,member_id,membership_plan_id,plan_name,end_date')
+            ->select(['id', 'membership_id', 'name', 'email', 'phone', 'gender', 'joining_date', 'status'])
             ->whereBetween('joining_date', [$fromDate->toDateString(), $toDate->toDateString()]);
 
-        $attendanceQuery = Attendance::with(['member', 'recorder'])
+        $attendanceQuery = Attendance::with([
+            'member:id,name,membership_id',
+            'recorder:id,name',
+        ])
+            ->select(['id', 'member_id', 'check_in', 'check_out', 'status', 'recorded_by'])
             ->whereBetween('check_in', [$fromDate, $toDate]);
 
         if ($search) {
@@ -51,17 +64,32 @@ class ReportService
         $netRevenue = max(0, round($grossCollected - $totalRefunded, 2));
         $outstandingBalance = (float) $payments->whereIn('status', [Payment::STATUS_PENDING, Payment::STATUS_PARTIALLY_PAID])->sum('remaining_balance');
 
-        $todayRevenue = (float) Payment::whereDate('payment_date', today())->sum('amount_paid')
-            - (float) Payment::whereDate('payment_date', today())->sum('refunded_amount');
+        // Single query for today / month / year revenue instead of 6 queries
+        $todayStr = today()->toDateString();
+        $monthStartStr = now()->copy()->startOfMonth()->toDateTimeString();
+        $yearStartStr = now()->copy()->startOfYear()->toDateTimeString();
 
-        $monthRevenue = (float) Payment::whereMonth('payment_date', now()->month)->whereYear('payment_date', now()->year)->sum('amount_paid')
-            - (float) Payment::whereMonth('payment_date', now()->month)->whereYear('payment_date', now()->year)->sum('refunded_amount');
+        $revAgg = Payment::selectRaw("
+            COALESCE(SUM(CASE WHEN payment_date >= ? THEN amount_paid - refunded_amount ELSE 0 END), 0) as today_rev,
+            COALESCE(SUM(CASE WHEN payment_date >= ? THEN amount_paid - refunded_amount ELSE 0 END), 0) as month_rev,
+            COALESCE(SUM(amount_paid - refunded_amount), 0) as year_rev
+        ", [
+            $todayStr . ' 00:00:00',
+            $monthStartStr,
+        ])->where('payment_date', '>=', $yearStartStr)->first();
 
-        $yearRevenue = (float) Payment::whereYear('payment_date', now()->year)->sum('amount_paid')
-            - (float) Payment::whereYear('payment_date', now()->year)->sum('refunded_amount');
+        $todayRevenue = max(0, round((float) ($revAgg->today_rev ?? 0), 2));
+        $monthRevenue = max(0, round((float) ($revAgg->month_rev ?? 0), 2));
+        $yearRevenue = max(0, round((float) ($revAgg->year_rev ?? 0), 2));
 
-        $activeMembershipsCount = Subscription::where('status', Subscription::STATUS_ACTIVE)->whereDate('end_date', '>=', now()->toDateString())->count();
-        $expiredMembershipsCount = Subscription::where('status', Subscription::STATUS_EXPIRED)->count();
+        // Single query for active & expired membership counts
+        $subAgg = Subscription::selectRaw("
+            SUM(CASE WHEN status = 'active' AND end_date >= ? THEN 1 ELSE 0 END) as active_cnt,
+            SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) as expired_cnt
+        ", [$todayStr])->first();
+
+        $activeMembershipsCount = (int) ($subAgg->active_cnt ?? 0);
+        $expiredMembershipsCount = (int) ($subAgg->expired_cnt ?? 0);
 
         $revenueByDay = $this->groupRevenueByDay($payments, $fromDate, $toDate);
         $paymentMethodsBreakdown = $payments
@@ -80,7 +108,7 @@ class ReportService
             ->whereBetween('check_in', [$fromDate, $toDate])
             ->groupBy('member_id')
             ->orderByDesc('visits')
-            ->with('member')
+            ->with('member:id,name,membership_id')
             ->take(10)
             ->get();
 
@@ -112,25 +140,20 @@ class ReportService
         $daysDiff = $from->diffInDays($to);
         $labels = [];
         $values = [];
+        $useDaily = $daysDiff <= 31;
+        $format = $useDaily ? 'Y-m-d' : 'Y-m';
 
-        if ($daysDiff <= 31) {
-            $cursor = $from->copy()->startOfDay();
-            while ($cursor->lte($to)) {
-                $key = $cursor->format('Y-m-d');
-                $labels[] = $cursor->format('M d');
-                $dayPayments = $payments->filter(fn (Payment $p) => $p->payment_date->format('Y-m-d') === $key);
-                $values[] = max(0, round((float) $dayPayments->sum('amount_paid') - (float) $dayPayments->sum('refunded_amount'), 2));
-                $cursor->addDay();
-            }
-        } else {
-            $cursor = $from->copy()->startOfMonth();
-            while ($cursor->lte($to)) {
-                $key = $cursor->format('Y-m');
-                $labels[] = $cursor->format('M Y');
-                $monthPayments = $payments->filter(fn (Payment $p) => $p->payment_date->format('Y-m') === $key);
-                $values[] = max(0, round((float) $monthPayments->sum('amount_paid') - (float) $monthPayments->sum('refunded_amount'), 2));
-                $cursor->addMonth();
-            }
+        $grouped = $payments->groupBy(fn (Payment $p) => $p->payment_date->format($format));
+        $cursor = $useDaily ? $from->copy()->startOfDay() : $from->copy()->startOfMonth();
+
+        while ($cursor->lte($to)) {
+            $key = $cursor->format($format);
+            $labels[] = $cursor->format($useDaily ? 'M d' : 'M Y');
+            $bucket = $grouped->get($key);
+            $values[] = $bucket
+                ? max(0, round((float) $bucket->sum('amount_paid') - (float) $bucket->sum('refunded_amount'), 2))
+                : 0.0;
+            $useDaily ? $cursor->addDay() : $cursor->addMonth();
         }
 
         return ['labels' => $labels, 'values' => $values];

@@ -17,7 +17,8 @@ class MemberController extends Controller
     {
         Subscription::syncExpiredStatuses();
 
-        $query = Member::with('activeSubscription.membershipPlan');
+        $query = Member::with('activeSubscription:id,member_id,membership_plan_id,plan_name,end_date')
+            ->select(['id', 'membership_id', 'name', 'email', 'phone', 'gender', 'photo', 'joining_date', 'status']);
 
         if ($search = trim((string) $request->input('search'))) {
             $query->where(function ($q) use ($search) {

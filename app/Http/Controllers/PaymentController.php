@@ -23,7 +23,11 @@ class PaymentController extends Controller
 
     public function index(Request $request)
     {
-        $query = Payment::with(['member', 'subscription.membershipPlan', 'recorder']);
+        $query = Payment::with([
+            'member:id,name,membership_id',
+            'subscription:id,membership_plan_id,plan_name',
+            'recorder:id,name',
+        ]);
 
         if ($search = trim((string) $request->input('search'))) {
             $query->where(function ($q) use ($search) {
@@ -73,10 +77,13 @@ class PaymentController extends Controller
 
     public function create(Request $request)
     {
-        $members = Member::orderBy('name')->get();
+        $members = Member::select(['id', 'name', 'membership_id'])->orderBy('name')->get();
         $selectedMemberId = $request->input('member_id') ?? $members->first()?->id;
         $subscriptions = $selectedMemberId
-            ? Subscription::with('membershipPlan')->where('member_id', $selectedMemberId)->latest('start_date')->get()
+            ? Subscription::with(['membershipPlan:id,name,price', 'payments:id,subscription_id,amount_paid,refunded_amount,status'])
+                ->where('member_id', $selectedMemberId)
+                ->latest('start_date')
+                ->get()
             : collect();
         $paymentMethods = Setting::paymentMethods();
 
@@ -85,7 +92,10 @@ class PaymentController extends Controller
 
     public function createForMember(Member $member)
     {
-        $subscriptions = $member->subscriptions()->with('membershipPlan')->latest('start_date')->get();
+        $subscriptions = $member->subscriptions()
+            ->with(['membershipPlan:id,name,price', 'payments:id,subscription_id,amount_paid,refunded_amount,status'])
+            ->latest('start_date')
+            ->get();
         $paymentMethods = Setting::paymentMethods();
         $selectedMemberId = $member->id;
 
@@ -95,7 +105,7 @@ class PaymentController extends Controller
     public function getSubscriptions(Member $member)
     {
         $subscriptions = $member->subscriptions()
-            ->with('membershipPlan')
+            ->with(['membershipPlan:id,name,price', 'payments:id,subscription_id,amount_paid,refunded_amount,status'])
             ->latest('start_date')
             ->get()
             ->map(function (Subscription $sub) {
