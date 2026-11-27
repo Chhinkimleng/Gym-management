@@ -354,4 +354,19 @@ class GymManagementTest extends TestCase
             ->assertStatus(200)
             ->assertSee('ចំណូលប្រចាំខែ');
     }
+
+    public function test_demo_login_buttons_work_for_admin_and_staff_roles(): void
+    {
+        $this->post('/demo-login', ['role' => 'admin'])
+            ->assertRedirect('/dashboard');
+        $this->assertAuthenticatedAs($this->admin);
+        $this->get('/settings/backup')->assertStatus(200);
+
+        $this->post('/logout');
+
+        $this->post('/demo-login', ['role' => 'staff'])
+            ->assertRedirect('/dashboard');
+        $this->assertAuthenticatedAs($this->staff);
+        $this->get('/settings/backup')->assertStatus(403);
+    }
 }

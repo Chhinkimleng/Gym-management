@@ -25,6 +25,9 @@ Route::get('/locale/{locale}', function (string $locale) {
 })->name('locale.switch');
 
 Auth::routes(['register' => false]);
+Route::post('/demo-login', [\App\Http\Controllers\Auth\LoginController::class, 'demoLogin'])
+    ->middleware(['guest', 'throttle:20,1'])
+    ->name('demo.login');
 
 Route::middleware(['auth', 'active.user'])->group(function () {
     // Dashboard

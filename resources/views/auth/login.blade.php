@@ -79,9 +79,29 @@
                     </button>
                 </form>
 
-                <div class="mt-6 p-4 rounded-2xl bg-[#F5F5EF] border border-[#E8EAE3] text-xs text-[#565C55]">
-                    <div class="font-semibold text-[#202520] mb-1">{{ __('Staff Access Policy') }}</div>
-                    {{ __('Staff accounts are provisioned by your gym administrator under Settings.') }}
+                <div class="mt-6 p-4 rounded-2xl bg-[#F5F5EF] border border-[#E8EAE3] space-y-3">
+                    <div>
+                        <div class="text-xs font-bold text-[#202520]">{{ __('Quick Demo Preview (For HR & Reviewers)') }}</div>
+                        <p class="text-[11px] text-[#858B84] mt-0.5">{{ __('Explore the live system instantly with role-based permissions.') }}</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <form method="POST" action="{{ route('demo.login') }}">
+                            @csrf
+                            <input type="hidden" name="role" value="admin">
+                            <button type="submit" class="btn-dark w-full py-2.5 text-xs">
+                                <x-icon name="shield" class="w-4 h-4 text-[#C5F467]" />
+                                <span class="btn-label">{{ __('View as Admin') }}</span>
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ route('demo.login') }}">
+                            @csrf
+                            <input type="hidden" name="role" value="staff">
+                            <button type="submit" class="btn-outline w-full py-2.5 text-xs bg-white">
+                                <x-icon name="users" class="w-4 h-4 text-[#202520]" />
+                                <span class="btn-label">{{ __('View as Staff') }}</span>
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
